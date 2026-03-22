@@ -1,0 +1,60 @@
+[gd_scene load_steps=5 format=3 uid="uid://dibq4u1wno7bb"]
+
+[ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_pvuo1"]
+[ext_resource type="Script" uid="uid://cey8bklcgwarj" path="res://scene/importscene.gd" id="1_xcrdd"]
+[ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="2_61nwy"]
+[ext_resource type="Texture2D" uid="uid://brmjo63hkakrc" path="res://pic/plus.png" id="3_xcrdd"]
+
+[node name="ImportGameMenu" type="Node2D"]
+script = ExtResource("1_xcrdd")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Background" type="TextureRect" parent="Control"]
+layout_mode = 0
+offset_left = -944.0
+offset_top = -312.0
+offset_right = 1983.0
+offset_bottom = 962.0
+texture = ExtResource("1_pvuo1")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Control"]
+layout_mode = 0
+offset_right = 1022.0
+offset_bottom = 72.0
+theme_override_font_sizes/bold_italics_font_size = 16
+theme_override_font_sizes/italics_font_size = 0
+theme_override_font_sizes/mono_font_size = 0
+theme_override_font_sizes/normal_font_size = 48
+theme_override_font_sizes/bold_font_size = 0
+text = "Импортированные игры"
+tab_size = 24
+horizontal_alignment = 1
+
+[node name="ButtonToMainScene" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 1077.0
+offset_top = 5.0
+offset_right = 1140.0
+offset_bottom = 62.0
+icon = ExtResource("2_61nwy")
+
+[node name="ButtonImport" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 858.0
+offset_top = 9.0
+offset_right = 941.0
+offset_bottom = 84.0
+icon = ExtResource("3_xcrdd")
+
+[node name="GamesContainer" type="Control" parent="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 221.0
+offset_top = 122.0
+offset_right = 921.0
+offset_bottom = 294.0

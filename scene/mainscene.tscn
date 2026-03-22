@@ -1,3 +1,62 @@
-[gd_scene format=3 uid="uid://rtwgqh3jjscx"]
+[gd_scene load_steps=3 format=3 uid="uid://rtwgqh3jjscx"]
+
+[ext_resource type="Script" uid="uid://bafrgqmoxo0df" path="res://scene/mainButton.gd" id="1_4ulk4"]
+[ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_siadl"]
 
 [node name="Node2D" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_4ulk4")
+
+[node name="Background" type="TextureRect" parent="Control"]
+layout_mode = 1
+offset_left = -944.0
+offset_top = -312.0
+offset_right = 1983.0
+offset_bottom = 962.0
+texture = ExtResource("1_siadl")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -5.0
+offset_top = 28.0
+offset_right = 1149.0
+offset_bottom = 133.0
+grow_horizontal = 2
+theme_override_font_sizes/normal_font_size = 48
+text = "Проводник"
+tab_size = 24
+horizontal_alignment = 1
+
+[node name="ButtonNewGane" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 335.0
+offset_top = 193.0
+offset_right = 815.0
+offset_bottom = 245.0
+text = "Новая игра"
+
+[node name="ButtonImportGame" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 335.0
+offset_top = 279.0
+offset_right = 815.0
+offset_bottom = 331.0
+text = "Импортировать игру"
+
+[node name="ButtonQuit" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 335.0
+offset_top = 368.0
+offset_right = 815.0
+offset_bottom = 420.0
+text = "Выйти"
