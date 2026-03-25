@@ -16,10 +16,10 @@ script = ExtResource("1_4ulk4")
 
 [node name="Background" type="TextureRect" parent="Control"]
 layout_mode = 1
-offset_left = -944.0
-offset_top = -312.0
-offset_right = 1983.0
-offset_bottom = 962.0
+offset_left = 7.0
+offset_top = -1.0
+offset_right = 1151.0
+offset_bottom = 651.0
 texture = ExtResource("1_siadl")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Control"]
@@ -27,10 +27,10 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -5.0
-offset_top = 28.0
-offset_right = 1149.0
-offset_bottom = 133.0
+offset_left = -4.0
+offset_top = 99.0
+offset_right = 1150.0
+offset_bottom = 204.0
 grow_horizontal = 2
 theme_override_font_sizes/normal_font_size = 48
 text = "Проводник"
