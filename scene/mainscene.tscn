@@ -40,7 +40,7 @@ text = "Проводник"
 tab_size = 24
 horizontal_alignment = 1
 
-[node name="Button" type="Button" parent="Control"]
+[node name="ButtonNewGame" type="Button" parent="Control"]
 layout_mode = 0
 offset_left = 454.0
 offset_top = 184.0
