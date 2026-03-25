@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://rtwgqh3jjscx"]
+[gd_scene load_steps=6 format=3 uid="uid://rtwgqh3jjscx"]
 
 [ext_resource type="Script" uid="uid://bafrgqmoxo0df" path="res://script/mainButton.gd" id="1_4ulk4"]
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_siadl"]
-[ext_resource type="Texture2D" uid="uid://c7vobo2h8v0cn" path="res://pic/button.png" id="3_wx3ht"]
+[ext_resource type="Texture2D" uid="uid://c7vobo2h8v0cn" path="res://pic/button.png" id="3_8ajfr"]
+[ext_resource type="Texture2D" uid="uid://c6kd1qr067jhe" path="res://pic/ButtonImportGame.jpg" id="4_j2iek"]
+[ext_resource type="Texture2D" uid="uid://bue8c0hweq3hc" path="res://pic/ButtonQuit.jpg" id="5_w76ko"]
 
 [node name="Node2D" type="Node2D"]
 
@@ -38,26 +40,26 @@ text = "Проводник"
 tab_size = 24
 horizontal_alignment = 1
 
-[node name="ButtonNewGane" type="Button" parent="Control"]
+[node name="Button" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 450.0
-offset_top = 188.0
-offset_right = 672.0
-offset_bottom = 259.0
-icon = ExtResource("3_wx3ht")
+offset_left = 454.0
+offset_top = 184.0
+offset_right = 667.0
+offset_bottom = 252.0
+icon = ExtResource("3_8ajfr")
 
 [node name="ButtonImportGame" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 335.0
-offset_top = 279.0
-offset_right = 815.0
-offset_bottom = 331.0
-text = "Импортировать игру"
+offset_left = 454.0
+offset_top = 274.0
+offset_right = 672.0
+offset_bottom = 342.0
+icon = ExtResource("4_j2iek")
 
 [node name="ButtonQuit" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 335.0
-offset_top = 368.0
-offset_right = 815.0
-offset_bottom = 420.0
-text = "Выйти"
+offset_left = 453.0
+offset_top = 365.0
+offset_right = 671.0
+offset_bottom = 433.0
+icon = ExtResource("5_w76ko")
