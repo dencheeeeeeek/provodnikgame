@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://nuwdf4oocaeu"]
+[gd_scene load_steps=6 format=3 uid="uid://nuwdf4oocaeu"]
 
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_0a7mo"]
 [ext_resource type="Script" uid="uid://5igkjk2xi0b8" path="res://script/NewGameScript.gd" id="1_e22ep"]
 [ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="2_e22ep"]
 [ext_resource type="Texture2D" uid="uid://brmjo63hkakrc" path="res://pic/plus.png" id="3_f7lip"]
+[ext_resource type="FontFile" uid="uid://fyylgh72wn6m" path="res://fonts/ofont.ru_Serati.ttf" id="3_sk3w3"]
 
 [node name="NewGameMenu" type="Node2D"]
 script = ExtResource("1_e22ep")
@@ -15,17 +16,28 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="Background" type="TextureRect" parent="Control"]
-layout_mode = 0
-offset_left = -944.0
-offset_top = -312.0
-offset_right = 1983.0
-offset_bottom = 962.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 1.0
+offset_right = 1114.0
+offset_bottom = 612.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("1_0a7mo")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Control"]
 layout_mode = 0
-offset_right = 1022.0
-offset_bottom = 72.0
+offset_left = 26.0
+offset_top = 3.0
+offset_right = 1048.0
+offset_bottom = 75.0
+theme_override_colors/table_border = Color(0.680546, 1.35247e-05, 0.474184, 1)
+theme_override_colors/table_even_row_bg = Color(0.169696, 4.17775e-05, 0.620109, 1)
+theme_override_colors/font_selected_color = Color(1, 0.504852, 0.774908, 1)
+theme_override_fonts/normal_font = ExtResource("3_sk3w3")
 theme_override_font_sizes/bold_italics_font_size = 16
 theme_override_font_sizes/italics_font_size = 0
 theme_override_font_sizes/mono_font_size = 0

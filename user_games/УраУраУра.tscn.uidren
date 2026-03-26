@@ -1,0 +1,121 @@
+[gd_scene load_steps=6 format=3 uid="uid://dhxg357wu2g0c"]
+
+[ext_resource type="Script" uid="uid://bji2t12enfbki" path="res://script/DraggableItem.gd" id="1_3xr6f"]
+[ext_resource type="Script" uid="uid://dobisjr3w06xf" path="res://script/GameWorld.gd" id="1_d8qbn"]
+[ext_resource type="Script" uid="uid://ctmwxnljdgbne" path="res://script/cameraDrag.gd" id="1_h5dyq"]
+[ext_resource type="Script" uid="uid://dbjupwl4gu0n5" path="res://script/DropZone.gd" id="2_46rqp"]
+[ext_resource type="Script" uid="uid://5blymjlhjbko" path="res://script/UI.gd" id="2_so1r8"]
+
+[node name="ElectricityGame" type="Node2D"]
+
+[node name="GameWorld" type="Node2D" parent="."]
+script = ExtResource("1_d8qbn")
+
+[node name="Field" type="TileMapLayer" parent="GameWorld"]
+
+[node name="Camera2D" type="Camera2D" parent="GameWorld"]
+script = ExtResource("1_h5dyq")
+
+[node name="Objects" type="Node2D" parent="GameWorld"]
+
+[node name="Wires" type="Node2D" parent="GameWorld"]
+
+[node name="DropZone" type="Node2D" parent="GameWorld"]
+script = ExtResource("2_46rqp")
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("2_so1r8")
+
+[node name="MenuPanel" type="Panel" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemsPanel" type="Panel" parent="UI/MenuPanel"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -106.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BatteryItem" type="TextureRect" parent="UI/MenuPanel/ItemsPanel"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -77.0
+offset_right = 91.0
+grow_vertical = 0
+script = ExtResource("1_3xr6f")
+metadata/_custom_type_script = "uid://bji2t12enfbki"
+
+[node name="BulbItem" type="TextureRect" parent="UI/MenuPanel/ItemsPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -45.5
+offset_top = -77.0
+offset_right = 45.5
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_3xr6f")
+metadata/_custom_type_script = "uid://bji2t12enfbki"
+
+[node name="SwitchItem" type="TextureRect" parent="UI/MenuPanel/ItemsPanel"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -91.0
+offset_top = -71.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("1_3xr6f")
+metadata/_custom_type_script = "uid://bji2t12enfbki"
+
+[node name="WireItem" type="TextureRect" parent="UI/MenuPanel/ItemsPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_3xr6f")
+metadata/_custom_type_script = "uid://bji2t12enfbki"
+
+[node name="StatusPanel" type="Panel" parent="UI/MenuPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -331.0
+offset_bottom = 60.0
+grow_horizontal = 0
+
+[node name="CircuitStatus" type="Label" parent="UI/MenuPanel/StatusPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -230.0
+offset_bottom = 45.0
+grow_horizontal = 0
+
+[node name="PowerLabel" type="Label" parent="UI/MenuPanel/StatusPanel"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 40.0
+offset_bottom = 11.5
+grow_vertical = 2
+
+[node name="WireDrawingLayer" type="CanvasLayer" parent="UI/MenuPanel"]

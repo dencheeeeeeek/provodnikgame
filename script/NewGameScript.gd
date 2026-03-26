@@ -209,4 +209,4 @@ func _on_import_pressed():
 	get_tree().change_scene_to_file("res://ImportGameMenu.tscn")
 
 func _on_back_pressed():
-	get_tree().change_scene_to_file("res://mainscene.tscn")
+	get_tree().change_scene_to_file("res://scene/mainscene.tscn")

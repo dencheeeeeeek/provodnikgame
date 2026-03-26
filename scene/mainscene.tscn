@@ -1,10 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://rtwgqh3jjscx"]
+[gd_scene load_steps=7 format=3 uid="uid://rtwgqh3jjscx"]
 
 [ext_resource type="Script" uid="uid://bafrgqmoxo0df" path="res://script/mainButton.gd" id="1_4ulk4"]
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_siadl"]
 [ext_resource type="Texture2D" uid="uid://c7vobo2h8v0cn" path="res://pic/button.png" id="3_8ajfr"]
+[ext_resource type="FontFile" uid="uid://fyylgh72wn6m" path="res://fonts/ofont.ru_Serati.ttf" id="3_j2iek"]
 [ext_resource type="Texture2D" uid="uid://c6kd1qr067jhe" path="res://pic/ButtonImportGame.jpg" id="4_j2iek"]
-[ext_resource type="Texture2D" uid="uid://bue8c0hweq3hc" path="res://pic/ButtonQuit.jpg" id="5_w76ko"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_w76ko"]
+load_path = "res://.godot/imported/ButtonQuit.jpg-4abd61f01143b3af242de6d86259fec5.ctex"
 
 [node name="Node2D" type="Node2D"]
 
@@ -19,7 +22,6 @@ script = ExtResource("1_4ulk4")
 
 [node name="Background" type="TextureRect" parent="Control"]
 layout_mode = 1
-offset_left = 7.0
 offset_top = -1.0
 offset_right = 1151.0
 offset_bottom = 651.0
@@ -35,6 +37,7 @@ offset_top = 99.0
 offset_right = 1150.0
 offset_bottom = 204.0
 grow_horizontal = 2
+theme_override_fonts/normal_font = ExtResource("3_j2iek")
 theme_override_font_sizes/normal_font_size = 48
 text = "Проводник"
 tab_size = 24
@@ -62,4 +65,4 @@ offset_left = 453.0
 offset_top = 365.0
 offset_right = 671.0
 offset_bottom = 433.0
-icon = ExtResource("5_w76ko")
+icon = SubResource("CompressedTexture2D_w76ko")

@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://dibq4u1wno7bb"]
+[gd_scene load_steps=6 format=3 uid="uid://dibq4u1wno7bb"]
 
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_pvuo1"]
 [ext_resource type="Script" uid="uid://cey8bklcgwarj" path="res://script/importscene.gd" id="1_xcrdd"]
 [ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="2_61nwy"]
+[ext_resource type="FontFile" uid="uid://fyylgh72wn6m" path="res://fonts/ofont.ru_Serati.ttf" id="3_p7g3s"]
 [ext_resource type="Texture2D" uid="uid://brmjo63hkakrc" path="res://pic/plus.png" id="3_xcrdd"]
 
 [node name="ImportGameMenu" type="Node2D"]
@@ -15,21 +16,29 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="Background" type="TextureRect" parent="Control"]
-layout_mode = 0
-offset_left = -944.0
-offset_top = -312.0
-offset_right = 1983.0
-offset_bottom = 962.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = -1.0
+offset_right = 1112.0
+offset_bottom = 609.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("1_pvuo1")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Control"]
 layout_mode = 0
-offset_right = 1022.0
-offset_bottom = 72.0
+offset_left = -7.0
+offset_top = 3.0
+offset_right = 1150.0
+offset_bottom = 70.0
+theme_override_fonts/normal_font = ExtResource("3_p7g3s")
 theme_override_font_sizes/bold_italics_font_size = 16
 theme_override_font_sizes/italics_font_size = 0
 theme_override_font_sizes/mono_font_size = 0
-theme_override_font_sizes/normal_font_size = 48
+theme_override_font_sizes/normal_font_size = 46
 theme_override_font_sizes/bold_font_size = 0
 text = "Импортированные игры"
 tab_size = 24
@@ -45,10 +54,10 @@ icon = ExtResource("2_61nwy")
 
 [node name="ButtonImport" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 858.0
-offset_top = 9.0
-offset_right = 941.0
-offset_bottom = 84.0
+offset_left = 1040.0
+offset_top = 553.0
+offset_right = 1131.0
+offset_bottom = 629.0
 icon = ExtResource("3_xcrdd")
 
 [node name="GamesContainer" type="Control" parent="Control"]
