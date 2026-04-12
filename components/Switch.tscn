@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dikphjkwlkwqs"]
+
+[ext_resource type="Script" uid="uid://d34bt76fxnpoy" path="res://components/Switch.gd" id="1_n2qx3"]
+
+[node name="Switch" type="Area2D"]
+script = ExtResource("1_n2qx3")

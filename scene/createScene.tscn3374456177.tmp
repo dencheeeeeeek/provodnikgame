@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://ccwa02ogvs56q"]
+
+[ext_resource type="Script" uid="uid://dorpf64avgxqt" path="res://script/createScene.gd" id="1_3xr6f"]
+[ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="2_h5dyq"]
+[ext_resource type="Texture2D" uid="uid://cular6iw57f2h" path="res://chank.png" id="3_so1r8"]
+
+[node name="CreateScene" type="Node2D"]
+script = ExtResource("1_3xr6f")
+
+[node name="Chank" type="Sprite2D" parent="."]
+position = Vector2(1808, -6.5005)
+scale = Vector2(502.75, 472.65)
+texture = ExtResource("3_so1r8")
+
+[node name="Button" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 1075.0
+offset_top = 3.0
+offset_right = 1146.0
+offset_bottom = 62.0
+grow_horizontal = 0
+icon = ExtResource("2_h5dyq")

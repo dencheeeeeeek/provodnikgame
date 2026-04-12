@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3a0eps3oqsry"]
+
+[ext_resource type="Script" uid="uid://bnrsdiril7suv" path="res://components/Voltmeter.gd" id="1_qvd4q"]
+
+[node name="Voltmeter" type="Area2D"]
+script = ExtResource("1_qvd4q")

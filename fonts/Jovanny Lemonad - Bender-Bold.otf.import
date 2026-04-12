@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://ddq05jtb2yjqf"
-path="res://.godot/imported/ofont.ru_Serati.ttf-8fabbad2555f2fec8e4a2906a15e967c.fontdata"
+uid="uid://ymhm5pfrxxfo"
+path="res://.godot/imported/Jovanny Lemonad - Bender-Bold.otf-9da89eefe0a61c40205c0ed7e33ea000.fontdata"
 
 [deps]
 
-source_file="res://fonts/ofont.ru_Serati.ttf"
-dest_files=["res://.godot/imported/ofont.ru_Serati.ttf-8fabbad2555f2fec8e4a2906a15e967c.fontdata"]
+source_file="res://fonts/Jovanny Lemonad - Bender-Bold.otf"
+dest_files=["res://.godot/imported/Jovanny Lemonad - Bender-Bold.otf-9da89eefe0a61c40205c0ed7e33ea000.fontdata"]
 
 [params]
 

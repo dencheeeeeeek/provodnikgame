@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_pvuo1"]
 [ext_resource type="Script" uid="uid://cey8bklcgwarj" path="res://script/importscene.gd" id="1_xcrdd"]
 [ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="2_61nwy"]
-[ext_resource type="FontFile" uid="uid://fyylgh72wn6m" path="res://fonts/ofont.ru_Serati.ttf" id="3_p7g3s"]
+[ext_resource type="FontFile" uid="uid://c3sk47csoucsm" path="res://fonts/Serati-Regular.otf" id="3_p7g3s"]
 [ext_resource type="Texture2D" uid="uid://brmjo63hkakrc" path="res://pic/plus.png" id="3_xcrdd"]
 
 [node name="ImportGameMenu" type="Node2D"]
@@ -63,7 +63,7 @@ icon = ExtResource("3_xcrdd")
 [node name="GamesContainer" type="Control" parent="Control"]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 221.0
-offset_top = 122.0
-offset_right = 921.0
-offset_bottom = 294.0
+offset_left = 277.0
+offset_top = 188.0
+offset_right = 837.0
+offset_bottom = 360.0

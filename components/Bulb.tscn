@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1cqgnc2q73f0"]
+
+[ext_resource type="Script" uid="uid://c6poj57petfuq" path="res://components/Bulb.gd" id="1_lmsk2"]
+
+[node name="Bulb" type="Area2D"]
+script = ExtResource("1_lmsk2")

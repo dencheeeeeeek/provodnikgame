@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://ddq05jtb2yjqf"
-path="res://.godot/imported/ofont.ru_Serati.ttf-8fabbad2555f2fec8e4a2906a15e967c.fontdata"
+uid="uid://bd1hht0q86fcy"
+path="res://.godot/imported/Serati-Italic.otf-2433f680cf68a4f3bcd58364e04545c9.fontdata"
 
 [deps]
 
-source_file="res://fonts/ofont.ru_Serati.ttf"
-dest_files=["res://.godot/imported/ofont.ru_Serati.ttf-8fabbad2555f2fec8e4a2906a15e967c.fontdata"]
+source_file="res://fonts/Serati-Italic.otf"
+dest_files=["res://.godot/imported/Serati-Italic.otf-2433f680cf68a4f3bcd58364e04545c9.fontdata"]
 
 [params]
 

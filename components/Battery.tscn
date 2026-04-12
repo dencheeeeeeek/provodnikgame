@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5muetxfdxn6d"]
+
+[ext_resource type="Script" uid="uid://dxa0ly7wkb2yn" path="res://components/Battery.gd" id="1_od3os"]
+
+[node name="Battery" type="Area2D"]
+script = ExtResource("1_od3os")
