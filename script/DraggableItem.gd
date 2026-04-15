@@ -28,9 +28,10 @@ func _drop_data(position: Vector2, data):
 func _input(event: InputEvent):
 	if is_dragging and event is InputEventMouseButton and not event.pressed:
 		is_dragging = false
-		
 		var world_position = get_global_mouse_position()
 		var gameworld = get_tree().current_scene.get_node_or_null("GameWorld")
+		
+		
 		
 		if gameworld:
 			# Отправляем сигнал, дальше DropZone сам определит коллизию

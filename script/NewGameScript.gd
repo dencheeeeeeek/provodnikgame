@@ -416,19 +416,25 @@ func add_game_item(parent: VBoxContainer, game: Dictionary):
 
 func _on_game_selected(game_file: String):
 	var scene_path = games_folder + game_file
-	print("🎮 Запуск игры: ", scene_path)
+	print("🎮 Запуск свободного режима: ", scene_path)
 	
 	if FileAccess.file_exists(scene_path):
+		# Проверяем, существует ли Глобальный скрипт GameState
+		# и ставим уровень 0 (Свободный мир)
+		if has_node("/root/GameState"):
+			get_node("/root/GameState").current_level = 0
+			print("Установлен режим: Свободный мир (0)")
+		else:
+			print("⚠️ ОШИБКА: GameState не найден в Autoload!")
+
 		var scene = load(scene_path)
 		if scene:
 			get_tree().change_scene_to_packed(scene)
 		else:
-			print("❌ Ошибка загрузки сцены")
 			_show_error_message("Не удалось загрузить игру")
 	else:
-		print("❌ Файл не найден: ", scene_path)
 		_show_error_message("Файл игры не найден")
-
+		
 func _on_delete_game(game_file: String, game_name: String):
 	var scene_path = games_folder + game_file
 	if FileAccess.file_exists(scene_path):

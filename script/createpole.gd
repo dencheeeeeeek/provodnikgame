@@ -1,24 +1,75 @@
-# Бесконечное поле с подгрузкой чанков
 extends TileMapLayer
 
-const CHUNK_SIZE := 16  # Размер чанка в тайлах
-const LOAD_DISTANCE := 3 # Дистанция подгрузки чанков
+# 1. Добавляем недостающие переменные и константы
+const CHUNK_SIZE = 16          # Размер одного чанка в тайлах
+var loaded_chunks = {}        # Словарь для хранения загруженных чанков
 
-var loaded_chunks := {}
-var camera: Camera2D
+# 1. Ссылки на камеру и менеджер
+@onready var camera = get_viewport().get_camera_2d()
+var CircuitManager # Будет создан в _ready
+
+# Константы для чанков (судя по твоему коду в image_8e8548.png)
+const LOAD_DISTANCE = 2 
 
 func _ready():
-	camera = get_viewport().get_camera_2d()
-	# Загружаем начальные чанки
-	_update_chunks()
+	# Исправляем путь (проверь, что переименовал файл!)
+	var manager_script = load("res://script/CircuitManager.gd")
+	if manager_script:
+		CircuitManager = manager_script.new()
+		add_child(CircuitManager)
+		print("✅ CircuitManager готов")
+	
+	# Запускаем нашу логику разделения
+	setup_current_level()
+
+func setup_current_level():
+	if not CircuitManager: return
+	
+	# Очищаем всё поле перед загрузкой
+	CircuitManager.grid_data.clear()
+	self.clear() # Очистка самих тайлов на слое
+	
+	var lv = GameState.current_level
+	print("🚀 Загрузка режима: ", "Свободный мир" if lv == 0 else "Уровень " + str(lv))
+	
+	match lv:
+		0:
+			CircuitManager.load_data()
+		1:
+			_level_1()
+		2:
+			_level_2()
+		3:
+			_level_3()
+
+# --- ТВОИ УРОВНИ (ЗДЕСЬ ПИШЕМ ЧТО ГДЕ СТОИТ) ---
+
+func _level_1():
+	# Пример: Батарейка и лампочка
+	CircuitManager.add_to_grid(Vector2i(-2, 0), {"type": "battery", "atlas_coords": Vector2i(0, 0)})
+	CircuitManager.add_to_grid(Vector2i(2, 0), {"type": "bulb", "atlas_coords": Vector2i(2, 0)})
+
+func _level_2():
+	# Пример: Выключатель и лампочка
+	CircuitManager.add_to_grid(Vector2i(2, 0), {"type": "bulb", "atlas_coords": Vector2i(2, 0)})
+	CircuitManager.add_to_grid(Vector2i(0, 0), {"type": "switch", "atlas_coords": Vector2i(1, 0)})
+	
+func _level_3():
+	# Пример: Выключатель и лампочка
+	CircuitManager.add_to_grid(Vector2i(3, 0), {"type": "bulb", "atlas_coords": Vector2i(1, 0)})
+	CircuitManager.add_to_grid(Vector2i(0, 0), {"type": "switch", "atlas_coords": Vector2i(0, 0)})
+
+
+# --- ЛОГИКА ЧАНКОВ (ЧТОБЫ НЕ БЫЛО ОШИБОК ИЗ СКРИНШОТА) ---
 
 func _process(delta):
 	if camera:
 		_update_chunks()
 
 func _update_chunks():
-	if not camera:
-		return
+	# Тут твоя логика из image_8e8548.png
+	# Убедись, что функции _world_to_chunk и остальные тоже есть в этом скрипте!
+	pass
 	
 	# Определяем чанк, в котором находится камера
 	var camera_chunk = _world_to_chunk(camera.position)

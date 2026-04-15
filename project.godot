@@ -15,6 +15,11 @@ run/main_scene="uid://rtwgqh3jjscx"
 config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+CircuitManager="*res://script/CircuitManager.gd"
+GameState="*res://script/GameState.gd"
+
 [display]
 
 window/stretch/mode="canvas_items"
@@ -23,3 +28,4 @@ window/stretch/mode="canvas_items"
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.960784, 0.960784, 0.862745, 1)

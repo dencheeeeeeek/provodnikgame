@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://rtwgqh3jjscx"]
+[gd_scene load_steps=9 format=3 uid="uid://rtwgqh3jjscx"]
 
 [ext_resource type="Script" uid="uid://bafrgqmoxo0df" path="res://script/mainButton.gd" id="1_4ulk4"]
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_siadl"]
 [ext_resource type="Texture2D" uid="uid://c7vobo2h8v0cn" path="res://pic/button.png" id="3_8ajfr"]
 [ext_resource type="FontFile" uid="uid://c3sk47csoucsm" path="res://fonts/Serati-Regular.otf" id="3_j2iek"]
 [ext_resource type="Texture2D" uid="uid://c6kd1qr067jhe" path="res://pic/ButtonImportGame.jpg" id="4_j2iek"]
+[ext_resource type="Texture2D" uid="uid://b444o1l0dxue3" path="res://pic/Buttonlevel.png" id="6_w76ko"]
+[ext_resource type="Script" uid="uid://c226y1lky74gr" path="res://script/button_level.gd" id="7_nx0of"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_w76ko"]
 load_path = "res://.godot/imported/ButtonQuit.jpg-4abd61f01143b3af242de6d86259fec5.ctex"
@@ -53,16 +55,25 @@ icon = ExtResource("3_8ajfr")
 
 [node name="ButtonImportGame" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 454.0
-offset_top = 274.0
-offset_right = 672.0
-offset_bottom = 342.0
+offset_left = 451.0
+offset_top = 357.0
+offset_right = 669.0
+offset_bottom = 425.0
 icon = ExtResource("4_j2iek")
 
 [node name="ButtonQuit" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 453.0
-offset_top = 365.0
-offset_right = 671.0
-offset_bottom = 433.0
+offset_left = 450.0
+offset_top = 427.0
+offset_right = 670.0
+offset_bottom = 495.0
 icon = SubResource("CompressedTexture2D_w76ko")
+
+[node name="ButtonLevel" type="Button" parent="Control"]
+layout_mode = 0
+offset_left = 446.0
+offset_top = 263.0
+offset_right = 683.0
+offset_bottom = 337.0
+icon = ExtResource("6_w76ko")
+script = ExtResource("7_nx0of")

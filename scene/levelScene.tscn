@@ -1,0 +1,89 @@
+[gd_scene load_steps=14 format=3 uid="uid://dampo7rdsw0cv"]
+
+[ext_resource type="Script" uid="uid://c56ojhe8ptqoc" path="res://script/back_button.gd" id="1_axbnh"]
+[ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_rgw2r"]
+[ext_resource type="Texture2D" uid="uid://c32irc0lxitbn" path="res://pic/close.png" id="1_v3rb0"]
+[ext_resource type="Texture2D" uid="uid://83w2080gghnh" path="res://pic/level1.png" id="4_s88gt"]
+[ext_resource type="Script" uid="uid://c7m0rrkjwx8fj" path="res://script/button_leve_1.gd" id="4_syma6"]
+[ext_resource type="Script" uid="uid://btle16t5cugrx" path="res://script/button_level_2.gd" id="5_rgw2r"]
+[ext_resource type="Script" uid="uid://vjslhyk7qw6y" path="res://script/button_level_3.gd" id="6_435i6"]
+[ext_resource type="Texture2D" uid="uid://dhdofollh5rtr" path="res://pic/level2.png" id="6_btq0e"]
+[ext_resource type="Script" uid="uid://cbebju7dsy1lo" path="res://script/button_level_4.gd" id="7_s88gt"]
+[ext_resource type="Script" uid="uid://bgwhjst8w60mw" path="res://script/button_level_5.gd" id="8_btq0e"]
+[ext_resource type="Texture2D" uid="uid://tbc78in8yona" path="res://pic/level3.png" id="8_jlrwn"]
+[ext_resource type="Texture2D" uid="uid://2wudfg58ntug" path="res://pic/level4.png" id="10_f2yst"]
+[ext_resource type="Texture2D" uid="uid://c1trtnbuo5djf" path="res://pic/level5.png" id="12_ns28o"]
+
+[node name="LevelScene" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="fon" type="TextureRect" parent="Control"]
+layout_mode = 0
+offset_top = -1.0
+offset_right = 1151.0
+offset_bottom = 651.0
+texture = ExtResource("1_rgw2r")
+
+[node name="Titl" type="RichTextLabel" parent="Control"]
+layout_mode = 0
+offset_left = 471.0
+offset_top = 198.0
+offset_right = 609.0
+offset_bottom = 246.0
+text = "ВЫБОР УРОВНЯ"
+
+[node name="BackButton" type="TextureButton" parent="Control"]
+layout_mode = 0
+offset_left = 1066.0
+offset_top = 31.0
+offset_right = 1140.0
+offset_bottom = 82.0
+texture_normal = ExtResource("1_v3rb0")
+script = ExtResource("1_axbnh")
+
+[node name="GridContainer" type="GridContainer" parent="Control"]
+layout_mode = 0
+offset_left = 149.0
+offset_top = 241.0
+offset_right = 868.0
+offset_bottom = 393.0
+columns = 3
+
+[node name="ButtonLeve1" type="Button" parent="Control/GridContainer"]
+layout_mode = 2
+icon = ExtResource("4_s88gt")
+script = ExtResource("4_syma6")
+scene_to_load = "uid://ccwa02ogvs56q"
+
+[node name="ButtonLevel2" type="Button" parent="Control/GridContainer"]
+layout_mode = 2
+icon = ExtResource("6_btq0e")
+script = ExtResource("5_rgw2r")
+scene_to_load = "uid://ccwa02ogvs56q"
+level_id = 2
+
+[node name="ButtonLevel3" type="Button" parent="Control/GridContainer"]
+layout_mode = 2
+icon = ExtResource("8_jlrwn")
+script = ExtResource("6_435i6")
+scene_to_load = "uid://ccwa02ogvs56q"
+level_id = 3
+
+[node name="ButtonLevel4" type="Button" parent="Control/GridContainer"]
+layout_mode = 2
+icon = ExtResource("10_f2yst")
+script = ExtResource("7_s88gt")
+scene_to_load = "uid://ccwa02ogvs56q"
+level_id = 4
+
+[node name="ButtonLevel5" type="Button" parent="Control/GridContainer"]
+layout_mode = 2
+icon = ExtResource("12_ns28o")
+script = ExtResource("8_btq0e")
+scene_to_load = "uid://ccwa02ogvs56q"
+level_id = 5
