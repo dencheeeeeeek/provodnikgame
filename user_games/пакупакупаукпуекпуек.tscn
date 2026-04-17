@@ -1,0 +1,42 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://script/createScene.gd" id="1_x05rs"]
+[ext_resource type="Texture2D" path="res://pic/battery.jpg" id="2_c2rl8"]
+[ext_resource type="Texture2D" path="res://pic/bulb.jpg" id="3_mq37p"]
+[ext_resource type="Texture2D" path="res://pic/bulb_off.jpg" id="4_7uqmp"]
+[ext_resource type="Texture2D" path="res://pic/bulb_on.jpg" id="5_d4cw1"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ri5j0"]
+texture = ExtResource("2_c2rl8")
+texture_region_size = Vector2i(128, 128)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1gcq6"]
+texture = ExtResource("3_mq37p")
+texture_region_size = Vector2i(128, 128)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_a2j0k"]
+texture = ExtResource("4_7uqmp")
+texture_region_size = Vector2i(128, 128)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i3j6g"]
+texture = ExtResource("5_d4cw1")
+texture_region_size = Vector2i(128, 128)
+0:0/0 = 0
+1:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_3xr6f"]
+tile_size = Vector2i(128, 128)
+sources/0 = SubResource("TileSetAtlasSource_ri5j0")
+sources/1 = SubResource("TileSetAtlasSource_1gcq6")
+sources/2 = SubResource("TileSetAtlasSource_a2j0k")
+sources/3 = SubResource("TileSetAtlasSource_i3j6g")
+
+[node name="CreateScene" type="Node2D"]
+script = ExtResource("1_x05rs")
+
+[node name="createpole" type="TileMapLayer" parent="."]
+tile_set = SubResource("TileSet_3xr6f")

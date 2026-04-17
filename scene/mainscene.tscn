@@ -54,11 +54,11 @@ offset_bottom = 252.0
 icon = ExtResource("3_8ajfr")
 
 [node name="ButtonImportGame" type="Button" parent="Control"]
-layout_mode = 0
-offset_left = 451.0
-offset_top = 357.0
-offset_right = 669.0
-offset_bottom = 425.0
+layout_mode = 1
+offset_left = 452.0
+offset_top = 347.0
+offset_right = 670.0
+offset_bottom = 415.0
 icon = ExtResource("4_j2iek")
 
 [node name="ButtonQuit" type="Button" parent="Control"]
@@ -71,9 +71,9 @@ icon = SubResource("CompressedTexture2D_w76ko")
 
 [node name="ButtonLevel" type="Button" parent="Control"]
 layout_mode = 0
-offset_left = 446.0
-offset_top = 263.0
-offset_right = 683.0
-offset_bottom = 337.0
+offset_left = 453.0
+offset_top = 265.0
+offset_right = 671.0
+offset_bottom = 333.0
 icon = ExtResource("6_w76ko")
 script = ExtResource("7_nx0of")

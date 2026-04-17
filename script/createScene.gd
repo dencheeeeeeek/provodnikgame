@@ -1,6 +1,5 @@
 extends Node2D
 
-
 # === ЗАГРУЗКА КОМПОНЕНТОВ ===
 var battery_scene = preload("res://components/Battery.tscn")
 var bulb_scene = preload("res://components/Bulb.tscn")
@@ -28,6 +27,8 @@ var is_wire_mode = false
 var wire_start_component = null
 var temp_wire = null
 var pending_component_type = null
+
+var is_delete_mode = false 
 
 # === ИНФОРМАЦИЯ О ЦЕПИ ===
 var circuit_voltage = 0.0
@@ -60,6 +61,14 @@ func _ready():
 	add_to_group("circuit")
 	_load_scene()
 	print("✅ Сцена готова! Игра: ", current_game_name)
+	
+	# Обновляем позицию кнопки при изменении размера окна
+	get_viewport().size_changed.connect(_update_back_button_position)
+
+func _update_back_button_position():
+	var btn = get_node_or_null("BackButton")
+	if btn:
+		btn.position = Vector2(get_viewport().size.x - 160, get_viewport().size.y - 50)
 
 func update_simulation():
 	_update_simulation()
@@ -176,6 +185,12 @@ func _create_back_button():
 	btn.text = "🏠 В ГЛАВНОЕ МЕНЮ"
 	btn.position = Vector2(get_viewport().size.x - 160, get_viewport().size.y - 50)
 	btn.size = Vector2(150, 45)
+	
+	# ПОДКЛЮЧЕНИЕ ШРИФТА
+	var custom_font = preload("res://fonts/Jovanny Lemonad - Bender-Bold.otf")
+	if custom_font:
+		btn.add_theme_font_override("font", custom_font)
+	
 	btn.add_theme_font_size_override("font_size", 14)
 	btn.pressed.connect(_to_main_scene)
 	add_child(btn)
@@ -192,8 +207,9 @@ func _setup_camera():
 func _create_info_panel():
 	var panel = Panel.new()
 	panel.name = "InfoPanel"
-	panel.position = Vector2(get_viewport().size.x - 400, 10)
-	panel.size = Vector2(390, 360)
+	# ИЗМЕНИ РАЗМЕРЫ ЗДЕСЬ (ширина, высота)
+	panel.position = Vector2(get_viewport().size.x - 420, 10)
+	panel.size = Vector2(340, 500)
 	add_child(panel)
 	
 	var style = StyleBoxFlat.new()
@@ -212,7 +228,7 @@ func _create_info_panel():
 	var label = Label.new()
 	label.name = "InfoLabel"
 	label.position = Vector2(15, 15)
-	label.size = Vector2(360, 330)
+	label.size = Vector2(370, 350)
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	panel.add_child(label)
@@ -253,7 +269,7 @@ func _create_tool_panel():
 	var tools_panel = Panel.new()
 	tools_panel.name = "ToolsPanel"
 	tools_panel.position = Vector2(10, 10)
-	tools_panel.size = Vector2(200, 580)
+	tools_panel.size = Vector2(220, 770)
 	add_child(tools_panel)
 	
 	var components_container = VBoxContainer.new()
@@ -261,11 +277,33 @@ func _create_tool_panel():
 	components_container.position = Vector2(5, 5)
 	tools_panel.add_child(components_container)
 	
+	# Кнопка режима проводов
 	var wire_btn = Button.new()
 	wire_btn.text = "🔌 РЕЖИМ ПРОВОДОВ"
 	wire_btn.custom_minimum_size = Vector2(180, 50)
 	wire_btn.pressed.connect(_activate_wire_mode)
 	components_container.add_child(wire_btn)
+	
+	# Кнопка выхода из режима проводов
+	var exit_wire_btn = Button.new()
+	exit_wire_btn.text = "❌ ВЫЙТИ ИЗ РЕЖИМА"
+	exit_wire_btn.custom_minimum_size = Vector2(180, 45)
+	exit_wire_btn.pressed.connect(_deactivate_wire_mode)
+	components_container.add_child(exit_wire_btn)
+	
+	# КНОПКА РЕЖИМА УДАЛЕНИЯ
+	var delete_mode_btn = Button.new()
+	delete_mode_btn.text = "🗑️ РЕЖИМ УДАЛЕНИЯ"
+	delete_mode_btn.custom_minimum_size = Vector2(180, 45)
+	delete_mode_btn.pressed.connect(_activate_delete_mode)
+	components_container.add_child(delete_mode_btn)
+	
+	# Кнопка выхода из режима удаления
+	var exit_delete_btn = Button.new()
+	exit_delete_btn.text = "✅ ВЫЙТИ ИЗ УДАЛЕНИЯ"
+	exit_delete_btn.custom_minimum_size = Vector2(180, 45)
+	exit_delete_btn.pressed.connect(_deactivate_delete_mode)
+	components_container.add_child(exit_delete_btn)
 	
 	var sep = HSeparator.new()
 	components_container.add_child(sep)
@@ -310,6 +348,15 @@ func _create_tool_panel():
 	zoom_out_btn.pressed.connect(_zoom_out)
 	components_container.add_child(zoom_out_btn)
 
+func _deactivate_wire_mode():
+	is_wire_mode = false
+	wire_start_component = null
+	if temp_wire:
+		temp_wire.queue_free()
+		temp_wire = null
+	print("🔌 Режим проводов ВЫКЛЮЧЕН! Теперь можно перемещаться по полю.")
+	_show_notification("🔌 Режим проводов выключен")
+
 func _start_create_component(comp_type):
 	is_wire_mode = false
 	wire_start_component = null
@@ -327,7 +374,24 @@ func _activate_wire_mode():
 		temp_wire.queue_free()
 		temp_wire = null
 	print("🔌 РЕЖИМ ПРОВОДОВ ВКЛЮЧЁН!")
+	_show_notification("🔌 Режим проводов включён")
+func _activate_delete_mode():
+	# Выключаем другие режимы
+	is_wire_mode = false
+	wire_start_component = null
+	pending_component_type = null
+	if temp_wire:
+		temp_wire.queue_free()
+		temp_wire = null
+	
+	is_delete_mode = true
+	print("🗑️ РЕЖИМ УДАЛЕНИЯ ВКЛЮЧЁН! Нажми на компонент, чтобы удалить его.")
+	_show_notification("🗑️ Режим удаления включён. Нажми на компонент для удаления.")
 
+func _deactivate_delete_mode():
+	is_delete_mode = false
+	print("✅ РЕЖИМ УДАЛЕНИЯ ВЫКЛЮЧЕН")
+	_show_notification("✅ Режим удаления выключен")
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -340,19 +404,32 @@ func _input(event):
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom(-0.1)
 	elif event is InputEventMouseMotion:
+		# В режиме проводов и есть начатый провод - рисуем временный провод
 		if is_wire_mode and wire_start_component:
 			_update_temp_wire(event.position)
+		
+		# Перетаскивание компонента
 		if is_dragging and selected_component:
 			var new_pos = get_global_mouse_position()
 			selected_component.global_position = new_pos
 			_update_all_wires()
-		elif is_panning and camera:
+		# Перемещение камеры
+		elif is_panning and camera and not (is_wire_mode and wire_start_component):
 			camera.position -= event.relative / camera.zoom
 
 func _on_click(screen_pos):
 	var world_pos = get_global_mouse_position()
 	var clicked = get_component_at_position(world_pos)
 	
+	# === РЕЖИМ УДАЛЕНИЯ (ПРИОРИТЕТ) ===
+	if is_delete_mode:
+		if clicked:
+			_delete_component(clicked)
+			print("🗑️ Удалён компонент: ", clicked.name)
+			_show_notification("🗑️ Удалён: " + clicked.name)
+		return
+	
+	# === РЕЖИМ ПРОВОДОВ ===
 	if is_wire_mode:
 		if clicked:
 			if not wire_start_component:
@@ -375,12 +452,14 @@ func _on_click(screen_pos):
 					temp_wire = null
 		return
 	
+	# === РЕЖИМ СОЗДАНИЯ КОМПОНЕНТОВ ===
 	if pending_component_type != null:
 		if not clicked:
 			_create_component(pending_component_type, world_pos)
 			pending_component_type = null
 		return
 	
+	# === ОБЫЧНЫЙ РЕЖИМ ===
 	if clicked:
 		if selected_component and selected_component != clicked:
 			if selected_component.has_method("deselect"):
@@ -395,6 +474,32 @@ func _on_click(screen_pos):
 			if selected_component.has_method("deselect"):
 				selected_component.deselect()
 			selected_component = null
+func _delete_component(component):
+	# Удаляем все провода, связанные с этим компонентом
+	var wires_to_remove = []
+	for wire in wires:
+		if wire.from == component or wire.to == component:
+			wires_to_remove.append(wire)
+	
+	for wire in wires_to_remove:
+		if wire.line and is_instance_valid(wire.line):
+			wire.line.queue_free()
+		wires.erase(wire)
+	
+	# Удаляем сам компонент
+	if is_instance_valid(component):
+		component.queue_free()
+	
+	# Удаляем из списка компонентов
+	components.erase(component)
+	
+	# Если удалённый компонент был выбран - сбрасываем выделение
+	if selected_component == component:
+		selected_component = null
+	
+	# Обновляем симуляцию и сохраняем
+	update_simulation()
+	_save_scene()
 
 func _on_release():
 	is_dragging = false
@@ -715,7 +820,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		print("   ❌ Недостаточно проводов!")
 		return result
 	
-	# Ищем все пути от одного контакта к другому
 	var all_paths = _find_all_paths_from_to(connections[0], connections[1], battery)
 	
 	print("   Найдено путей: ", all_paths.size())
@@ -724,7 +828,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		print("   ❌ Нет путей!")
 		return result
 	
-	# Проверяем выключатели
 	var all_switches_on = true
 	for path in all_paths:
 		for comp in path:
@@ -744,7 +847,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 	result.voltage = total_voltage
 	print("   ⚡ Общее напряжение источника: ", total_voltage, " V")
 	
-	# Сопротивление каждого пути
 	var path_resistances = []
 	var path_components = []
 	
@@ -763,19 +865,16 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		path_components.append(comp_list)
 		print("      Общее R = ", path_res, " Ω")
 	
-	# Определяем тип соединения
 	var is_parallel = all_paths.size() > 1
 	var total_resistance = 0.0
 	
 	if is_parallel:
-		# Параллельное соединение
 		var inverse_sum = 0.0
 		for r in path_resistances:
 			if r > 0:
 				inverse_sum += 1.0 / r
 		total_resistance = 1.0 / inverse_sum if inverse_sum > 0 else 0
 	else:
-		# Последовательное соединение
 		total_resistance = path_resistances[0] if path_resistances.size() > 0 else 0
 	
 	print("   📊 Общее сопротивление: ", total_resistance, " Ω (", "параллельное" if is_parallel else "последовательное", ")")
@@ -788,7 +887,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 	print("   💨 Общий ток: ", total_current, " A")
 	
 	if is_parallel:
-		# ПАРАЛЛЕЛЬНОЕ: напряжение одинаковое на всех ветвях = total_voltage
 		print("   📊 Параллельное соединение: напряжение на всех ветвях = ", total_voltage, " V")
 		
 		for i in range(path_components.size()):
@@ -802,7 +900,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 			for comp in branch_comps:
 				var r = _get_resistance(comp)
 				if r > 0 and r < 999999:
-					# Напряжение на компоненте в параллельной ветви
 					var comp_voltage = branch_current * r
 					result.component_voltages[comp] = comp_voltage
 					result.component_currents[comp] = branch_current
@@ -813,7 +910,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 					result.component_voltages[comp] = 0.0
 					result.component_currents[comp] = branch_current
 	else:
-		# ПОСЛЕДОВАТЕЛЬНОЕ: ток одинаковый, напряжение делится
 		var main_path = path_components[0]
 		var current = total_current
 		
@@ -834,7 +930,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 			else:
 				print("      ", comp.name, ": разрыв цепи (R=∞)")
 		
-		# Проверка суммы напряжений
 		var voltage_sum = 0.0
 		for comp in main_path:
 			voltage_sum += result.component_voltages.get(comp, 0.0)
@@ -852,10 +947,9 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 				comp.update_state(current)
 				print("   🔧 Амперметр ", comp.name, " = ", current, " A")
 	
-	# Обновляем вольтметры - показываем напряжение на компоненте, к которому подключены
+	# Обновляем вольтметры
 	for comp in components:
 		if comp.name.to_lower().contains("voltmeter"):
-			# Находим компонент, к которому подключён вольтметр
 			var volt_connections = comp.get_meta("connections", [])
 			var target_component = null
 			var target_voltage = total_voltage
@@ -951,7 +1045,6 @@ func _light_wire(comp1, comp2, current: float):
 				if current > 0:
 					var intensity = clamp(current * 0.3, 0.2, 1.0)
 					wire.line.default_color = Color(1.0, intensity * 0.5, 0.2, 1.0)
-					print("      🔥 Провод ", comp1.name, " - ", comp2.name, " зажёгся (ток ", current, " A)")
 				else:
 					wire.line.default_color = Color(0.5, 0.5, 0.5, 0.8)
 			return
@@ -995,4 +1088,4 @@ func _zoom_out():
 
 func _to_main_scene():
 	_save_scene()
-	get_tree().change_scene_to_file("res://scene/mainscene.tscn")
+	get_tree().change_scene_to_file("res://scene/NewGameMenu.tscn")
