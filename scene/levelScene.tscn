@@ -58,32 +58,23 @@ columns = 3
 layout_mode = 2
 icon = ExtResource("4_s88gt")
 script = ExtResource("4_syma6")
-scene_to_load = "uid://ccwa02ogvs56q"
 
 [node name="ButtonLevel2" type="Button" parent="Control/GridContainer"]
 layout_mode = 2
 icon = ExtResource("6_btq0e")
 script = ExtResource("5_rgw2r")
-scene_to_load = "uid://ccwa02ogvs56q"
-level_id = 2
 
 [node name="ButtonLevel3" type="Button" parent="Control/GridContainer"]
 layout_mode = 2
 icon = ExtResource("8_jlrwn")
 script = ExtResource("6_435i6")
-scene_to_load = "uid://ccwa02ogvs56q"
-level_id = 3
 
 [node name="ButtonLevel4" type="Button" parent="Control/GridContainer"]
 layout_mode = 2
 icon = ExtResource("10_f2yst")
 script = ExtResource("7_s88gt")
-scene_to_load = "uid://ccwa02ogvs56q"
-level_id = 4
 
 [node name="ButtonLevel5" type="Button" parent="Control/GridContainer"]
 layout_mode = 2
 icon = ExtResource("12_ns28o")
 script = ExtResource("8_btq0e")
-scene_to_load = "uid://ccwa02ogvs56q"
-level_id = 5

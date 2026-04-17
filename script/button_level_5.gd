@@ -1,20 +1,14 @@
-extends Button # Или TextureButton, если используешь свои PNG
+extends Button
 
-# Эти переменные появятся в инспекторе справа
-@export_file("*.tscn") var scene_to_load # Путь к сцене уровня
-@export var level_id: int = 1            # Номер уровня
+# Путь к сцене первого уровня. Убедись, что имя файла совпадает!
+@export var level_path : String = "res://scene/level_5.tscn"
 
-func _ready():
-	# Соединяем сигнал нажатия на саму себя с функцией
-	self.pressed.connect(_on_level_button_pressed)
-
-func _on_level_button_pressed():
-	if scene_to_load != "":
-		# Сохраняем номер уровня в глобальный GameState, чтобы игра знала, что загружать
-		GameState.current_level = level_id
-		
-		# Загружаем сцену
-		get_tree().change_scene_to_file(scene_to_load)
-		print("Загрузка уровня: ", level_id)
-	else:
-		print("Ошибка: Путь к сцене не задан в инспекторе!")
+func _pressed():
+	# Сообщаем глобальному скрипту, что мы на уровне 1
+	GameState.current_level = 1
+	
+	# Переходим на сцену
+	var error = get_tree().change_scene_to_file(level_path)
+	
+	if error != OK:
+		print("Ошибка: Не удалось загрузить сцену по пути: ", level_path)

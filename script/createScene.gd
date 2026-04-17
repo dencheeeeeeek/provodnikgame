@@ -1,5 +1,6 @@
 extends Node2D
 
+
 # === ЗАГРУЗКА КОМПОНЕНТОВ ===
 var battery_scene = preload("res://components/Battery.tscn")
 var bulb_scene = preload("res://components/Bulb.tscn")

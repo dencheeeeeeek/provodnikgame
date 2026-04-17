@@ -1,27 +1,27 @@
-[gd_scene load_steps=11 format=3 uid="uid://ccwa02ogvs56q"]
+[gd_scene load_steps=11 format=3 uid="uid://nxiu75mbvbra"]
 
-[ext_resource type="Script" uid="uid://dorpf64avgxqt" path="res://script/createScene.gd" id="1_3xr6f"]
-[ext_resource type="Texture2D" uid="uid://b1umakkf4jp3b" path="res://pic/battery.jpg" id="2_d8qbn"]
-[ext_resource type="Texture2D" uid="uid://c05bdk8nvfsp" path="res://pic/bulb.jpg" id="3_wibbp"]
-[ext_resource type="Texture2D" uid="uid://dou2gxdu24f42" path="res://pic/bulb_off.jpg" id="4_j4aqm"]
-[ext_resource type="Texture2D" uid="uid://cw1ixltg2cpai" path="res://pic/bulb_on.jpg" id="5_d3urv"]
+[ext_resource type="Script" uid="uid://dorpf64avgxqt" path="res://script/createScene.gd" id="1_b3hgo"]
+[ext_resource type="Texture2D" uid="uid://b1umakkf4jp3b" path="res://pic/battery.jpg" id="2_0nrww"]
+[ext_resource type="Texture2D" uid="uid://c05bdk8nvfsp" path="res://pic/bulb.jpg" id="3_fkbsx"]
+[ext_resource type="Texture2D" uid="uid://dou2gxdu24f42" path="res://pic/bulb_off.jpg" id="4_hp1sr"]
+[ext_resource type="Texture2D" uid="uid://cw1ixltg2cpai" path="res://pic/bulb_on.jpg" id="5_rf0og"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ri5j0"]
-texture = ExtResource("2_d8qbn")
+texture = ExtResource("2_0nrww")
 texture_region_size = Vector2i(128, 128)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1gcq6"]
-texture = ExtResource("3_wibbp")
+texture = ExtResource("3_fkbsx")
 texture_region_size = Vector2i(128, 128)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_a2j0k"]
-texture = ExtResource("4_j4aqm")
+texture = ExtResource("4_hp1sr")
 texture_region_size = Vector2i(128, 128)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i3j6g"]
-texture = ExtResource("5_d3urv")
+texture = ExtResource("5_rf0og")
 texture_region_size = Vector2i(128, 128)
 0:0/0 = 0
 1:0/0 = 0
@@ -36,7 +36,7 @@ sources/2 = SubResource("TileSetAtlasSource_a2j0k")
 sources/3 = SubResource("TileSetAtlasSource_i3j6g")
 
 [node name="CreateScene" type="Node2D"]
-script = ExtResource("1_3xr6f")
+script = ExtResource("1_b3hgo")
 
 [node name="createpole" type="TileMapLayer" parent="."]
 tile_set = SubResource("TileSet_3xr6f")
