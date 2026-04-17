@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://c1pqj1m5q0q23"]
+[gd_scene load_steps=12 format=3 uid="uid://c1pqj1m5q0q23"]
 
 [ext_resource type="Script" uid="uid://dorpf64avgxqt" path="res://script/createScene.gd" id="1_03a3j"]
 [ext_resource type="Texture2D" uid="uid://b1umakkf4jp3b" path="res://pic/battery.jpg" id="2_3153v"]
 [ext_resource type="Texture2D" uid="uid://c05bdk8nvfsp" path="res://pic/bulb.jpg" id="3_4opn3"]
 [ext_resource type="Texture2D" uid="uid://dou2gxdu24f42" path="res://pic/bulb_off.jpg" id="4_6joic"]
 [ext_resource type="Texture2D" uid="uid://cw1ixltg2cpai" path="res://pic/bulb_on.jpg" id="5_fc7km"]
+[ext_resource type="Texture2D" uid="uid://nj7nkxg73mws" path="res://pic/level5 plan.png" id="6_3153v"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ri5j0"]
 texture = ExtResource("2_3153v")
@@ -40,3 +41,7 @@ script = ExtResource("1_03a3j")
 
 [node name="createpole" type="TileMapLayer" parent="."]
 tile_set = SubResource("TileSet_3xr6f")
+
+[node name="Level5Plan" type="Sprite2D" parent="."]
+position = Vector2(628, -408)
+texture = ExtResource("6_3153v")
