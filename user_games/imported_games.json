@@ -3,5 +3,11 @@
 		"file": "createScene.tscn",
 		"name": "createScene",
 		"type": "template"
+	},
+	{
+		"created_at": "2026-04-18T09:14:53",
+		"file": "Прикольчики.tscn",
+		"name": "Прикольчики",
+		"type": "created"
 	}
 ]

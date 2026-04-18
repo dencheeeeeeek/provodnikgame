@@ -12,6 +12,16 @@ var voltmeter_scene = preload("res://components/Voltmeter.tscn")
 var background_texture = preload("res://chank.png")
 var background_sprites: Array[Sprite2D] = []
 
+# === ПЕРЕМЕННЫЕ ДЛЯ ПЕРЕТАСКИВАНИЯ ПАНЕЛЕЙ ===
+var is_dragging_tools_panel = false
+var is_dragging_info_panel = false
+var drag_panel_offset = Vector2()
+
+var tools_panel: Panel = null
+var info_panel: Panel = null
+var components_container: VBoxContainer = null
+var info_label: Label = null
+
 # === ПЕРЕМЕННЫЕ ===
 var camera: Camera2D
 var is_dragging = false
@@ -182,7 +192,7 @@ func _get_game_name():
 func _create_back_button():
 	var btn = Button.new()
 	btn.name = "BackButton"
-	btn.text = "🏠 В ГЛАВНОЕ МЕНЮ"
+	btn.text = "🏠 ВЫЙТИ"
 	btn.position = Vector2(get_viewport().size.x - 160, get_viewport().size.y - 50)
 	btn.size = Vector2(150, 45)
 	
@@ -205,35 +215,81 @@ func _setup_camera():
 	_create_notification_label()
 
 func _create_info_panel():
-	var panel = Panel.new()
-	panel.name = "InfoPanel"
-	# ИЗМЕНИ РАЗМЕРЫ ЗДЕСЬ (ширина, высота)
-	panel.position = Vector2(get_viewport().size.x - 420, 10)
-	panel.size = Vector2(340, 500)
-	add_child(panel)
+	info_panel = Panel.new()
+	info_panel.name = "InfoPanel"
+	info_panel.position = Vector2(get_viewport().size.x - 420, 10)
+	info_panel.size = Vector2(350, 500)
+	add_child(info_panel)
+	
+	# Заголовок для перетаскивания
+	var title_bar = Panel.new()
+	title_bar.name = "TitleBar"
+	title_bar.position = Vector2(0, 0)
+	title_bar.size = Vector2(350, 30)
+	
+	# Стилизация заголовка (вместо color)
+	var title_style = StyleBoxFlat.new()
+	title_style.bg_color = Color(0.2, 0.2, 0.3, 1)
+	title_bar.add_theme_stylebox_override("panel", title_style)
+	
+	info_panel.add_child(title_bar)
+	
+	var title_label = Label.new()
+	title_label.text = "☰ ПАРАМЕТРЫ ЦЕПИ"
+	title_label.position = Vector2(10, 5)
+	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.add_theme_color_override("font_color", Color.WHITE)
+	title_bar.add_child(title_label)
+	
+	# Настраиваем перетаскивание
+	title_bar.gui_input.connect(_on_info_panel_drag.bind(title_bar, info_panel))
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.05, 0.05, 0.1, 0.95)
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_width_top = 2
-	style.border_width_bottom = 2
+	style.set_border_width_all(2)
 	style.border_color = Color(0.4, 0.6, 0.9, 1)
-	style.corner_radius_top_left = 12
-	style.corner_radius_top_right = 12
-	style.corner_radius_bottom_left = 12
-	style.corner_radius_bottom_right = 12
-	panel.add_theme_stylebox_override("panel", style)
+	style.set_corner_radius_all(12)
+	info_panel.add_theme_stylebox_override("panel", style)
 	
-	var label = Label.new()
-	label.name = "InfoLabel"
-	label.position = Vector2(15, 15)
-	label.size = Vector2(370, 350)
-	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", Color.WHITE)
-	panel.add_child(label)
+	info_label = Label.new()
+	info_label.name = "InfoLabel"
+	info_label.position = Vector2(15, 40)
+	info_label.size = Vector2(370, 330)
+	info_label.add_theme_font_size_override("font_size", 14)
+	info_label.add_theme_color_override("font_color", Color.WHITE)
+	info_panel.add_child(info_label)
 	
 	_update_info_panel()
+	
+func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			is_dragging_tools_panel = true
+			drag_panel_offset = panel.position - get_global_mouse_position()
+		else:
+			is_dragging_tools_panel = false
+	
+	if event is InputEventMouseMotion and is_dragging_tools_panel:
+		var new_pos = get_global_mouse_position() + drag_panel_offset
+		# Ограничиваем, чтобы панель не выходила за экран
+		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
+		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
+		panel.position = new_pos
+
+func _on_info_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			is_dragging_info_panel = true
+			drag_panel_offset = panel.position - get_global_mouse_position()
+		else:
+			is_dragging_info_panel = false
+	
+	if event is InputEventMouseMotion and is_dragging_info_panel:
+		var new_pos = get_global_mouse_position() + drag_panel_offset
+		# Ограничиваем, чтобы панель не выходила за экран
+		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
+		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
+		panel.position = new_pos
 
 func _update_info_panel():
 	var panel = get_node_or_null("InfoPanel")
@@ -260,21 +316,45 @@ func _update_info_panel():
 │                                  │
 ├──────────────────────────────────┤
 │                                  │
-│   📊 Состояние цепи: %s           │
+│   📊 Состояние цепи: %s          │
 │                                  │
 └──────────────────────────────────┘
 """ % [circuit_voltage, circuit_resistance, circuit_current, circuit_power, status_text]
 
 func _create_tool_panel():
-	var tools_panel = Panel.new()
+	tools_panel = Panel.new()
 	tools_panel.name = "ToolsPanel"
 	tools_panel.position = Vector2(10, 10)
-	tools_panel.size = Vector2(220, 770)
+	tools_panel.size = Vector2(220, 800)
 	add_child(tools_panel)
 	
-	var components_container = VBoxContainer.new()
+	# Заголовок для перетаскивания
+	var title_bar = Panel.new()
+	title_bar.name = "TitleBar"
+	title_bar.position = Vector2(0, 0)
+	title_bar.size = Vector2(220, 30)
+	
+	# Стилизация заголовка (вместо color)
+	var title_style = StyleBoxFlat.new()
+	title_style.bg_color = Color(0.2, 0.2, 0.3, 1)
+	title_bar.add_theme_stylebox_override("panel", title_style)
+	
+	tools_panel.add_child(title_bar)
+	
+	var title_label = Label.new()
+	title_label.text = "☰ ИНСТРУМЕНТЫ"
+	title_label.position = Vector2(10, 5)
+	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.add_theme_color_override("font_color", Color.WHITE)
+	title_bar.add_child(title_label)
+	
+	# Настраиваем перетаскивание
+	title_bar.gui_input.connect(_on_tools_panel_drag.bind(title_bar, tools_panel))
+	
+	components_container = VBoxContainer.new()
 	components_container.name = "ComponentsContainer"
-	components_container.position = Vector2(5, 5)
+	components_container.position = Vector2(5, 35)
+	components_container.size = Vector2(210, 660)
 	tools_panel.add_child(components_container)
 	
 	# Кнопка режима проводов
@@ -291,12 +371,12 @@ func _create_tool_panel():
 	exit_wire_btn.pressed.connect(_deactivate_wire_mode)
 	components_container.add_child(exit_wire_btn)
 	
-	# КНОПКА РЕЖИМА УДАЛЕНИЯ
-	var delete_mode_btn = Button.new()
-	delete_mode_btn.text = "🗑️ РЕЖИМ УДАЛЕНИЯ"
-	delete_mode_btn.custom_minimum_size = Vector2(180, 45)
-	delete_mode_btn.pressed.connect(_activate_delete_mode)
-	components_container.add_child(delete_mode_btn)
+	# Кнопка режима удаления
+	var delete_btn = Button.new()
+	delete_btn.text = "🗑️ РЕЖИМ УДАЛЕНИЯ"
+	delete_btn.custom_minimum_size = Vector2(180, 45)
+	delete_btn.pressed.connect(_activate_delete_mode)
+	components_container.add_child(delete_btn)
 	
 	# Кнопка выхода из режима удаления
 	var exit_delete_btn = Button.new()
@@ -607,6 +687,12 @@ func _save_scene():
 		"saved_at": Time.get_datetime_string_from_system()
 	}
 	
+	# Добавляем позиции панелей
+	if tools_panel:
+		save_data["tools_panel_pos"] = [tools_panel.position.x, tools_panel.position.y]
+	if info_panel:
+		save_data["info_panel_pos"] = [info_panel.position.x, info_panel.position.y]
+	
 	for comp in components:
 		var comp_type = comp.name.split("_")[0].to_lower()
 		var comp_data = {
@@ -644,6 +730,7 @@ func _load_scene():
 	if save_path.is_empty():
 		print("❌ Путь сохранения не установлен!")
 		return
+	
 	
 	print("========== ЗАГРУЗКА ==========")
 	print("Игра: ", current_game_name)
@@ -732,6 +819,10 @@ func _load_scene():
 	if save_data.has("camera_zoom"):
 		zoom_level = save_data["camera_zoom"]
 		camera.zoom = Vector2(zoom_level, zoom_level)
+	if save_data.has("tools_panel_pos") and tools_panel:
+		tools_panel.position = Vector2(save_data["tools_panel_pos"][0], save_data["tools_panel_pos"][1])
+	if save_data.has("info_panel_pos") and info_panel:
+		info_panel.position = Vector2(save_data["info_panel_pos"][0], save_data["info_panel_pos"][1])
 	
 	update_simulation()
 	_update_background()
