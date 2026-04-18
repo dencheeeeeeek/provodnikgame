@@ -52,67 +52,213 @@ func _on_new_game_pressed():
 
 func show_name_dialog():
 	var dialog = Window.new()
-	dialog.title = "Создание новой игры"
-	dialog.size = Vector2(400, 200)
+	dialog.title = ""
+	dialog.size = Vector2(450, 420)  # Увеличил высоту
 	dialog.exclusive = true
 	dialog.transient = true
+	dialog.popup_centered()
 	
-	var main_container = VBoxContainer.new()
-	main_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_container.add_theme_constant_override("separation", 15)
+	# Убираем стандартную рамку и делаем красивое окно
+	dialog.unresizable = true
+	dialog.borderless = true
 	
-	var label = Label.new()
-	label.text = "Введите название новой игры:"
-	if custom_font:
-		label.add_theme_font_override("font", custom_font)
-		label.add_theme_font_size_override("font_size", 16)
-	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	# Создаём основной фон
+	var main_panel = Panel.new()
+	main_panel.size = Vector2(430, 400)
+	main_panel.position = Vector2(10, 10)
 	
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
+	panel_style.set_border_width_all(2)
+	panel_style.border_color = Color(0.5, 0.7, 1, 1)
+	panel_style.set_corner_radius_all(20)
+	panel_style.shadow_size = 10
+	panel_style.shadow_color = Color(0, 0, 0, 0.5)
+	main_panel.add_theme_stylebox_override("panel", panel_style)
+	dialog.add_child(main_panel)
+	
+	# Заголовок
+	var title_panel = Panel.new()
+	title_panel.size = Vector2(430, 50)
+	title_panel.position = Vector2(0, 0)
+	var title_style = StyleBoxFlat.new()
+	title_style.bg_color = Color(0.15, 0.15, 0.25, 1)
+	title_style.corner_radius_top_left = 20
+	title_style.corner_radius_top_right = 20
+	title_style.corner_radius_bottom_left = 0
+	title_style.corner_radius_bottom_right = 0
+	title_panel.add_theme_stylebox_override("panel", title_style)
+	main_panel.add_child(title_panel)
+	
+	var title_label = Label.new()
+	title_label.text = "✨ СОЗДАНИЕ НОВОЙ ИГРЫ ✨"
+	title_label.position = Vector2(65, 12)
+	title_label.size = Vector2(300, 30)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 18)
+	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
+	title_panel.add_child(title_label)
+	
+	# Кнопка закрытия
+	var close_btn = Button.new()
+	close_btn.text = "✕"
+	close_btn.position = Vector2(395, 10)
+	close_btn.size = Vector2(30, 30)
+	close_btn.add_theme_font_size_override("font_size", 18)
+	close_btn.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
+	
+	var close_style = StyleBoxFlat.new()
+	close_style.bg_color = Color(0.5, 0.2, 0.2, 1)
+	close_style.set_corner_radius_all(15)
+	close_btn.add_theme_stylebox_override("normal", close_style)
+	
+	var close_hover_style = StyleBoxFlat.new()
+	close_hover_style.bg_color = Color(0.7, 0.3, 0.3, 1)
+	close_hover_style.set_corner_radius_all(15)
+	close_btn.add_theme_stylebox_override("hover", close_hover_style)
+	
+	close_btn.pressed.connect(func():
+		dialog.queue_free()
+	)
+	title_panel.add_child(close_btn)
+	
+	# Основной контейнер с отступами
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 40)
+	margin.add_theme_constant_override("margin_right", 40)
+	margin.add_theme_constant_override("margin_top", 30)
+	margin.add_theme_constant_override("margin_bottom", 30)
+	margin.size = Vector2(430, 400)
+	margin.position = Vector2(0, 0)
+	main_panel.add_child(margin)
+	
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 20)
+	margin.add_child(vbox)
+	
+	# Пустое место сверху
+	var top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(top_spacer)
+	
+	# Иконка (опущена ниже)
+	var icon_container = CenterContainer.new()
+	icon_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(icon_container)
+	
+	var icon_label = Label.new()
+	icon_label.text = "🎮"
+	icon_label.add_theme_font_size_override("font_size", 40)
+	icon_container.add_child(icon_label)
+	
+	# Отступ после иконки
+	var icon_spacer = Control.new()
+	icon_spacer.custom_minimum_size = Vector2(8, 2)
+	vbox.add_child(icon_spacer)
+	
+	# Текст
+	var info_label = Label.new()
+	info_label.text = "Введите название вашей игры:"
+	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info_label.add_theme_font_size_override("font_size", 15)
+	info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1, 1))
+	vbox.add_child(info_label)
+	
+	# Отступ перед полем ввода
+	var input_spacer = Control.new()
+	input_spacer.custom_minimum_size = Vector2(0, 0)
+	vbox.add_child(input_spacer)
+	
+	# Поле ввода
 	var line_edit = LineEdit.new()
-	line_edit.placeholder_text = "Название игры"
+	line_edit.placeholder_text = "   Название игры"
 	line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line_edit.custom_minimum_size = Vector2(300, 40)
+	line_edit.custom_minimum_size = Vector2(352, 45)
+	line_edit.add_theme_font_size_override("font_size", 16)
+	
+	var line_style = StyleBoxFlat.new()
+	line_style.bg_color = Color(0.15, 0.15, 0.2, 1)
+	line_style.set_border_width_all(2)
+	line_style.border_color = Color(0.4, 0.6, 0.9, 1)
+	line_style.set_corner_radius_all(10)
+	line_edit.add_theme_stylebox_override("normal", line_style)
+	line_edit.add_theme_stylebox_override("focus", line_style)
+	
 	if custom_font:
 		line_edit.add_theme_font_override("font", custom_font)
-		line_edit.add_theme_font_size_override("font_size", 18)
 	
-	var buttons_container = HBoxContainer.new()
-	buttons_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	buttons_container.add_theme_constant_override("separation", 20)
+	vbox.add_child(line_edit)
+	
+	# Отступ перед кнопками
+	var button_spacer = Control.new()
+	button_spacer.custom_minimum_size = Vector2(0, 20)
+	vbox.add_child(button_spacer)
+	
+	# Кнопки
+	var buttons_container = CenterContainer.new()
+	buttons_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(buttons_container)
+	
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 30)
+	buttons_container.add_child(hbox)
 	
 	var create_btn = Button.new()
-	create_btn.text = "Создать"
-	create_btn.custom_minimum_size = Vector2(120, 40)
-	if custom_font:
-		create_btn.add_theme_font_override("font", custom_font)
-		create_btn.add_theme_font_size_override("font_size", 16)
+	create_btn.text = "✅ СОЗДАТЬ"
+	create_btn.custom_minimum_size = Vector2(150, 50)
+	create_btn.add_theme_font_size_override("font_size", 16)
+	
+	var create_style = StyleBoxFlat.new()
+	create_style.bg_color = Color(0.2, 0.5, 0.2, 1)
+	create_style.set_border_width_all(1)
+	create_style.border_color = Color(0.3, 0.8, 0.3, 1)
+	create_style.set_corner_radius_all(12)
+	create_btn.add_theme_stylebox_override("normal", create_style)
+	
+	var create_hover_style = StyleBoxFlat.new()
+	create_hover_style.bg_color = Color(0.3, 0.6, 0.3, 1)
+	create_hover_style.set_border_width_all(1)
+	create_hover_style.border_color = Color(0.4, 0.9, 0.4, 1)
+	create_hover_style.set_corner_radius_all(12)
+	create_btn.add_theme_stylebox_override("hover", create_hover_style)
 	
 	var cancel_btn = Button.new()
-	cancel_btn.text = "Отмена"
-	cancel_btn.custom_minimum_size = Vector2(120, 40)
-	if custom_font:
-		cancel_btn.add_theme_font_override("font", custom_font)
-		cancel_btn.add_theme_font_size_override("font_size", 16)
+	cancel_btn.text = "❌ ОТМЕНА"
+	cancel_btn.custom_minimum_size = Vector2(150, 50)
+	cancel_btn.add_theme_font_size_override("font_size", 16)
 	
-	buttons_container.add_child(create_btn)
-	buttons_container.add_child(cancel_btn)
+	var cancel_style = StyleBoxFlat.new()
+	cancel_style.bg_color = Color(0.5, 0.2, 0.2, 1)
+	cancel_style.set_border_width_all(1)
+	cancel_style.border_color = Color(0.8, 0.3, 0.3, 1)
+	cancel_style.set_corner_radius_all(12)
+	cancel_btn.add_theme_stylebox_override("normal", cancel_style)
 	
-	var margin_container = MarginContainer.new()
-	margin_container.add_theme_constant_override("margin_left", 20)
-	margin_container.add_theme_constant_override("margin_right", 20)
-	margin_container.add_theme_constant_override("margin_top", 20)
-	margin_container.add_theme_constant_override("margin_bottom", 20)
+	var cancel_hover_style = StyleBoxFlat.new()
+	cancel_hover_style.bg_color = Color(0.6, 0.3, 0.3, 1)
+	cancel_hover_style.set_border_width_all(1)
+	cancel_hover_style.border_color = Color(0.9, 0.4, 0.4, 1)
+	cancel_hover_style.set_corner_radius_all(12)
+	cancel_btn.add_theme_stylebox_override("hover", cancel_hover_style)
 	
-	main_container.add_child(label)
-	main_container.add_child(line_edit)
-	main_container.add_child(buttons_container)
-	
-	margin_container.add_child(main_container)
-	dialog.add_child(margin_container)
+	hbox.add_child(create_btn)
+	hbox.add_child(cancel_btn)
 	
 	create_btn.pressed.connect(func():
-		_on_create_game_confirmed(line_edit)
+		var game_name = line_edit.text.strip_edges()
+		if game_name.is_empty():
+			_show_error_message("Название не может быть пустым!")
+			return
+		
+		var invalid_chars = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
+		for char in invalid_chars:
+			if game_name.contains(char):
+				_show_error_message("Название содержит недопустимые символы!")
+				return
+		
+		create_new_game(game_name)
 		dialog.queue_free()
 	)
 	
@@ -121,7 +267,18 @@ func show_name_dialog():
 	)
 	
 	line_edit.text_submitted.connect(func(text):
-		_on_create_game_confirmed(line_edit)
+		var game_name = line_edit.text.strip_edges()
+		if game_name.is_empty():
+			_show_error_message("Название не может быть пустым!")
+			return
+		
+		var invalid_chars = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
+		for char in invalid_chars:
+			if game_name.contains(char):
+				_show_error_message("Название содержит недопустимые символы!")
+				return
+		
+		create_new_game(game_name)
 		dialog.queue_free()
 	)
 	
@@ -144,44 +301,67 @@ func _on_create_game_confirmed(line_edit: LineEdit):
 	create_new_game(game_name)
 
 func _show_error_message(message: String):
-	var error_dialog = Window.new()
-	error_dialog.title = "Ошибка"
-	error_dialog.size = Vector2(350, 150)
-	error_dialog.exclusive = true
-	error_dialog.transient = true
+	var dialog = Window.new()
+	dialog.title = ""
+	dialog.size = Vector2(400, 180)
+	dialog.exclusive = true
+	dialog.transient = true
+	dialog.unresizable = true
+	dialog.borderless = true
+	dialog.popup_centered()
 	
-	var container = VBoxContainer.new()
-	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var main_panel = Panel.new()
+	main_panel.size = Vector2(380, 160)
+	main_panel.position = Vector2(10, 10)
 	
-	var label = Label.new()
-	label.text = message
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if custom_font:
-		label.add_theme_font_override("font", custom_font)
-		label.add_theme_font_size_override("font_size", 14)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
+	panel_style.set_border_width_all(2)
+	panel_style.border_color = Color(0.8, 0.3, 0.3, 1)
+	panel_style.set_corner_radius_all(20)
+	main_panel.add_theme_stylebox_override("panel", panel_style)
+	dialog.add_child(main_panel)
 	
-	var ok_button = Button.new()
-	ok_button.text = "OK"
-	ok_button.custom_minimum_size = Vector2(100, 35)
-	if custom_font:
-		ok_button.add_theme_font_override("font", custom_font)
-		ok_button.add_theme_font_size_override("font_size", 16)
+	var vbox = VBoxContainer.new()
+	vbox.position = Vector2(20, 20)
+	vbox.size = Vector2(340, 120)
+	vbox.add_theme_constant_override("separation", 15)
+	main_panel.add_child(vbox)
 	
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_all", 20)
+	var icon_label = Label.new()
+	icon_label.text = "❌"
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 40)
+	vbox.add_child(icon_label)
 	
-	container.add_child(label)
-	container.add_child(ok_button)
-	margin.add_child(container)
-	error_dialog.add_child(margin)
+	var text_label = Label.new()
+	text_label.text = message
+	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text_label.add_theme_font_size_override("font_size", 16)
+	text_label.add_theme_color_override("font_color", Color(0.8, 0.3, 0.3, 1))
+	vbox.add_child(text_label)
 	
-	ok_button.pressed.connect(func():
-		error_dialog.queue_free()
+	var ok_btn = Button.new()
+	ok_btn.text = "OK"
+	ok_btn.custom_minimum_size = Vector2(100, 35)
+	ok_btn.add_theme_font_size_override("font_size", 14)
+	
+	var ok_style = StyleBoxFlat.new()
+	ok_style.bg_color = Color(0.5, 0.2, 0.2, 1)
+	ok_style.set_corner_radius_all(8)
+	ok_btn.add_theme_stylebox_override("normal", ok_style)
+	
+	var close_btn_container = CenterContainer.new()
+	close_btn_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_btn_container.add_child(ok_btn)
+	vbox.add_child(close_btn_container)
+	
+	ok_btn.pressed.connect(func():
+		dialog.queue_free()
 	)
 	
-	add_child(error_dialog)
-	error_dialog.popup_centered()
+	add_child(dialog)
+	dialog.popup_centered()
 
 func create_new_game(game_name: String):
 	var file_name = game_name + ".tscn"
@@ -224,45 +404,67 @@ func create_new_game(game_name: String):
 		_show_error_message("Не удалось загрузить шаблон сцены!")
 
 func _show_success_message(message: String):
-	var success_dialog = Window.new()
-	success_dialog.title = "Успех"
-	success_dialog.size = Vector2(350, 150)
-	success_dialog.exclusive = true
-	success_dialog.transient = true
+	var dialog = Window.new()
+	dialog.title = ""
+	dialog.size = Vector2(400, 180)
+	dialog.exclusive = true
+	dialog.transient = true
+	dialog.unresizable = true
+	dialog.borderless = true
+	dialog.popup_centered()
 	
-	var container = VBoxContainer.new()
-	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var main_panel = Panel.new()
+	main_panel.size = Vector2(380, 160)
+	main_panel.position = Vector2(10, 10)
 	
-	var label = Label.new()
-	label.text = message
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if custom_font:
-		label.add_theme_font_override("font", custom_font)
-		label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", Color.GREEN)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
+	panel_style.set_border_width_all(2)
+	panel_style.border_color = Color(0.3, 0.8, 0.3, 1)
+	panel_style.set_corner_radius_all(20)
+	main_panel.add_theme_stylebox_override("panel", panel_style)
+	dialog.add_child(main_panel)
 	
-	var ok_button = Button.new()
-	ok_button.text = "OK"
-	ok_button.custom_minimum_size = Vector2(100, 35)
-	if custom_font:
-		ok_button.add_theme_font_override("font", custom_font)
-		ok_button.add_theme_font_size_override("font_size", 16)
+	var vbox = VBoxContainer.new()
+	vbox.position = Vector2(20, 20)
+	vbox.size = Vector2(340, 120)
+	vbox.add_theme_constant_override("separation", 15)
+	main_panel.add_child(vbox)
 	
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_all", 20)
+	var icon_label = Label.new()
+	icon_label.text = "✅"
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 40)
+	vbox.add_child(icon_label)
 	
-	container.add_child(label)
-	container.add_child(ok_button)
-	margin.add_child(container)
-	success_dialog.add_child(margin)
+	var text_label = Label.new()
+	text_label.text = message
+	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text_label.add_theme_font_size_override("font_size", 16)
+	text_label.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3, 1))
+	vbox.add_child(text_label)
 	
-	ok_button.pressed.connect(func():
-		success_dialog.queue_free()
+	var ok_btn = Button.new()
+	ok_btn.text = "OK"
+	ok_btn.custom_minimum_size = Vector2(100, 35)
+	ok_btn.add_theme_font_size_override("font_size", 14)
+	
+	var ok_style = StyleBoxFlat.new()
+	ok_style.bg_color = Color(0.2, 0.5, 0.2, 1)
+	ok_style.set_corner_radius_all(8)
+	ok_btn.add_theme_stylebox_override("normal", ok_style)
+	
+	var close_btn_container = CenterContainer.new()
+	close_btn_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_btn_container.add_child(ok_btn)
+	vbox.add_child(close_btn_container)
+	
+	ok_btn.pressed.connect(func():
+		dialog.queue_free()
 	)
 	
-	add_child(success_dialog)
-	success_dialog.popup_centered()
+	add_child(dialog)
+	dialog.popup_centered()
 
 func save_game_to_list(file_name: String, game_name: String):
 	var games = []

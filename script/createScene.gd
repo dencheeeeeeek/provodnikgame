@@ -32,13 +32,30 @@ var wires = []
 var zoom_level = 1.0
 var last_camera_pos: Vector2 = Vector2.ZERO
 
+# === ПЕРЕМЕННЫЕ ДЛЯ ТАЧ-УПРАВЛЕНИЯ ===
+var touch_points = {}
+var last_touch_distance = 0.0
+var is_pinch_zooming = false
+
 # === ПЕРЕМЕННЫЕ ДЛЯ ПРОВОДОВ ===
 var is_wire_mode = false
 var wire_start_component = null
 var temp_wire = null
 var pending_component_type = null
 
-var is_delete_mode = false 
+var is_delete_mode = false
+
+# === ЗАГРУЗКА МУЗЫКИ ===
+var music_player: AudioStreamPlayer
+var music_stream = preload("res://audio/background_music.mp3")  # Укажи свой путь
+var is_music_on = true
+var music_volume = -10  # от -80 до 0, где 0 - максимальная громкость
+
+# === ПЕРЕМЕННЫЕ ДЛЯ ДОЛГОГО НАЖАТИЯ (МОБИЛЬНЫЕ) ===
+var long_press_timer = 0.0
+var long_press_active = false
+var long_press_component = null
+const LONG_PRESS_TIME = 0.8
 
 # === ИНФОРМАЦИЯ О ЦЕПИ ===
 var circuit_voltage = 0.0
@@ -68,12 +85,30 @@ func _ready():
 	_create_tool_panel()
 	_create_info_panel()
 	_create_back_button()
+	_create_music_panel()  # <-- ДОБАВЬ ЭТУ СТРОКУ
 	add_to_group("circuit")
 	_load_scene()
 	print("✅ Сцена готова! Игра: ", current_game_name)
 	
-	# Обновляем позицию кнопки при изменении размера окна
 	get_viewport().size_changed.connect(_update_back_button_position)
+	
+	# Инициализация музыки
+	_music_init()
+	
+	# Настройка для мобильных устройств
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+		_setup_mobile_ui()
+		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
+
+func _setup_mobile_ui():
+	if tools_panel:
+		tools_panel.size = Vector2(250, 850)
+		components_container.size = Vector2(240, 810)
+	
+	for child in components_container.get_children():
+		if child is Button:
+			child.custom_minimum_size = Vector2(220, 55)
+			child.add_theme_font_size_override("font_size", 18)
 
 func _update_back_button_position():
 	var btn = get_node_or_null("BackButton")
@@ -122,10 +157,7 @@ func _create_notification_label():
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0, 0, 0, 0.7)
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
+	style.set_corner_radius_all(10)
 	notification.add_theme_stylebox_override("normal", style)
 	
 	if camera:
@@ -175,6 +207,17 @@ func _process(delta):
 	if camera and camera.global_position != last_camera_pos:
 		_update_background()
 		last_camera_pos = camera.global_position
+	
+	# Для тачпада: если кнопка мыши не зажата, но is_panning остался true - сбрасываем
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		is_panning = false
+		is_dragging = false
+
+func _open_component_menu(component):
+	if component.name.to_lower().contains("battery"):
+		if component.has_method("_open_voltage_menu"):
+			component._open_voltage_menu()
+			_show_notification("🔋 Настройка напряжения")
 
 func _get_game_name():
 	var scene_path = get_tree().current_scene.scene_file_path
@@ -194,14 +237,13 @@ func _create_back_button():
 	btn.name = "BackButton"
 	btn.text = "🏠 ВЫЙТИ"
 	btn.position = Vector2(get_viewport().size.x - 160, get_viewport().size.y - 50)
-	btn.size = Vector2(150, 45)
+	btn.size = Vector2(150, 55 if OS.has_feature("mobile") else 45)
 	
-	# ПОДКЛЮЧЕНИЕ ШРИФТА
 	var custom_font = preload("res://fonts/Jovanny Lemonad - Bender-Bold.otf")
 	if custom_font:
 		btn.add_theme_font_override("font", custom_font)
 	
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 16 if OS.has_feature("mobile") else 14)
 	btn.pressed.connect(_to_main_scene)
 	add_child(btn)
 
@@ -221,13 +263,11 @@ func _create_info_panel():
 	info_panel.size = Vector2(350, 500)
 	add_child(info_panel)
 	
-	# Заголовок для перетаскивания
 	var title_bar = Panel.new()
 	title_bar.name = "TitleBar"
 	title_bar.position = Vector2(0, 0)
-	title_bar.size = Vector2(350, 30)
+	title_bar.size = Vector2(350, 40)
 	
-	# Стилизация заголовка (вместо color)
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = Color(0.2, 0.2, 0.3, 1)
 	title_bar.add_theme_stylebox_override("panel", title_style)
@@ -236,12 +276,11 @@ func _create_info_panel():
 	
 	var title_label = Label.new()
 	title_label.text = "☰ ПАРАМЕТРЫ ЦЕПИ"
-	title_label.position = Vector2(10, 5)
-	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.position = Vector2(10, 10)
+	title_label.add_theme_font_size_override("font_size", 16)
 	title_label.add_theme_color_override("font_color", Color.WHITE)
 	title_bar.add_child(title_label)
 	
-	# Настраиваем перетаскивание
 	title_bar.gui_input.connect(_on_info_panel_drag.bind(title_bar, info_panel))
 	
 	var style = StyleBoxFlat.new()
@@ -253,15 +292,33 @@ func _create_info_panel():
 	
 	info_label = Label.new()
 	info_label.name = "InfoLabel"
-	info_label.position = Vector2(15, 40)
-	info_label.size = Vector2(370, 330)
-	info_label.add_theme_font_size_override("font_size", 14)
+	info_label.position = Vector2(15, 50)
+	info_label.size = Vector2(320, 440)
+	info_label.add_theme_font_size_override("font_size", 16 if OS.has_feature("mobile") else 14)
 	info_label.add_theme_color_override("font_color", Color.WHITE)
 	info_panel.add_child(info_label)
 	
 	_update_info_panel()
+func _music_init():
+	music_player = AudioStreamPlayer.new()
+	music_player.stream = music_stream
+	music_player.volume_db = music_volume
+	music_player.bus = "Master"
+	add_child(music_player)
 	
+	# Воспроизводим с задержкой для уверенности
+	await get_tree().create_timer(0.5).timeout
+	if music_player:
+		music_player.play()
+		# Зацикливаем
+		music_player.finished.connect(_music_loop)
+
+func _music_loop():
+	if music_player and is_music_on:
+		music_player.play()
+
 func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
+	# Мышь
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			is_dragging_tools_panel = true
@@ -271,12 +328,24 @@ func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 	
 	if event is InputEventMouseMotion and is_dragging_tools_panel:
 		var new_pos = get_global_mouse_position() + drag_panel_offset
-		# Ограничиваем, чтобы панель не выходила за экран
 		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
 		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
 		panel.position = new_pos
+	
+	# Тач
+	if event is InputEventScreenTouch and event.pressed:
+		is_dragging_tools_panel = true
+		drag_panel_offset = panel.position - get_global_mouse_position()
+	elif event is InputEventScreenDrag and is_dragging_tools_panel:
+		var new_pos = get_global_mouse_position() + drag_panel_offset
+		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
+		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
+		panel.position = new_pos
+	elif event is InputEventScreenTouch and not event.pressed:
+		is_dragging_tools_panel = false
 
 func _on_info_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
+	# Мышь
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			is_dragging_info_panel = true
@@ -286,10 +355,21 @@ func _on_info_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 	
 	if event is InputEventMouseMotion and is_dragging_info_panel:
 		var new_pos = get_global_mouse_position() + drag_panel_offset
-		# Ограничиваем, чтобы панель не выходила за экран
 		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
 		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
 		panel.position = new_pos
+	
+	# Тач
+	if event is InputEventScreenTouch and event.pressed:
+		is_dragging_info_panel = true
+		drag_panel_offset = panel.position - get_global_mouse_position()
+	elif event is InputEventScreenDrag and is_dragging_info_panel:
+		var new_pos = get_global_mouse_position() + drag_panel_offset
+		new_pos.x = clamp(new_pos.x, 0, get_viewport().size.x - panel.size.x)
+		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
+		panel.position = new_pos
+	elif event is InputEventScreenTouch and not event.pressed:
+		is_dragging_info_panel = false
 
 func _update_info_panel():
 	var panel = get_node_or_null("InfoPanel")
@@ -325,16 +405,14 @@ func _create_tool_panel():
 	tools_panel = Panel.new()
 	tools_panel.name = "ToolsPanel"
 	tools_panel.position = Vector2(10, 10)
-	tools_panel.size = Vector2(220, 800)
+	tools_panel.size = Vector2(240, 880)
 	add_child(tools_panel)
 	
-	# Заголовок для перетаскивания
 	var title_bar = Panel.new()
 	title_bar.name = "TitleBar"
 	title_bar.position = Vector2(0, 0)
-	title_bar.size = Vector2(220, 30)
+	title_bar.size = Vector2(tools_panel.size.x, 40)
 	
-	# Стилизация заголовка (вместо color)
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = Color(0.2, 0.2, 0.3, 1)
 	title_bar.add_theme_stylebox_override("panel", title_style)
@@ -343,45 +421,44 @@ func _create_tool_panel():
 	
 	var title_label = Label.new()
 	title_label.text = "☰ ИНСТРУМЕНТЫ"
-	title_label.position = Vector2(10, 5)
-	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.position = Vector2(10, 10)
+	title_label.add_theme_font_size_override("font_size", 16)
 	title_label.add_theme_color_override("font_color", Color.WHITE)
 	title_bar.add_child(title_label)
 	
-	# Настраиваем перетаскивание
 	title_bar.gui_input.connect(_on_tools_panel_drag.bind(title_bar, tools_panel))
 	
 	components_container = VBoxContainer.new()
 	components_container.name = "ComponentsContainer"
-	components_container.position = Vector2(5, 35)
-	components_container.size = Vector2(210, 660)
+	components_container.position = Vector2(5, 45)
+	components_container.size = Vector2(tools_panel.size.x - 10, tools_panel.size.y - 50)
 	tools_panel.add_child(components_container)
 	
-	# Кнопка режима проводов
 	var wire_btn = Button.new()
 	wire_btn.text = "🔌 РЕЖИМ ПРОВОДОВ"
-	wire_btn.custom_minimum_size = Vector2(180, 50)
+	wire_btn.custom_minimum_size = Vector2(220, 55)
+	wire_btn.add_theme_font_size_override("font_size", 16)
 	wire_btn.pressed.connect(_activate_wire_mode)
 	components_container.add_child(wire_btn)
 	
-	# Кнопка выхода из режима проводов
 	var exit_wire_btn = Button.new()
 	exit_wire_btn.text = "❌ ВЫЙТИ ИЗ РЕЖИМА"
-	exit_wire_btn.custom_minimum_size = Vector2(180, 45)
+	exit_wire_btn.custom_minimum_size = Vector2(220, 50)
+	exit_wire_btn.add_theme_font_size_override("font_size", 15)
 	exit_wire_btn.pressed.connect(_deactivate_wire_mode)
 	components_container.add_child(exit_wire_btn)
 	
-	# Кнопка режима удаления
 	var delete_btn = Button.new()
 	delete_btn.text = "🗑️ РЕЖИМ УДАЛЕНИЯ"
-	delete_btn.custom_minimum_size = Vector2(180, 45)
+	delete_btn.custom_minimum_size = Vector2(220, 50)
+	delete_btn.add_theme_font_size_override("font_size", 15)
 	delete_btn.pressed.connect(_activate_delete_mode)
 	components_container.add_child(delete_btn)
 	
-	# Кнопка выхода из режима удаления
 	var exit_delete_btn = Button.new()
 	exit_delete_btn.text = "✅ ВЫЙТИ ИЗ УДАЛЕНИЯ"
-	exit_delete_btn.custom_minimum_size = Vector2(180, 45)
+	exit_delete_btn.custom_minimum_size = Vector2(220, 50)
+	exit_delete_btn.add_theme_font_size_override("font_size", 15)
 	exit_delete_btn.pressed.connect(_deactivate_delete_mode)
 	components_container.add_child(exit_delete_btn)
 	
@@ -391,7 +468,8 @@ func _create_tool_panel():
 	for type in component_types:
 		var btn = Button.new()
 		btn.text = component_types[type]["icon"] + " " + component_types[type]["name"]
-		btn.custom_minimum_size = Vector2(180, 45)
+		btn.custom_minimum_size = Vector2(220, 50)
+		btn.add_theme_font_size_override("font_size", 15)
 		btn.pressed.connect(_start_create_component.bind(type))
 		components_container.add_child(btn)
 	
@@ -400,31 +478,36 @@ func _create_tool_panel():
 	
 	var save_btn = Button.new()
 	save_btn.text = "💾 СОХРАНИТЬ"
-	save_btn.custom_minimum_size = Vector2(180, 45)
+	save_btn.custom_minimum_size = Vector2(220, 50)
+	save_btn.add_theme_font_size_override("font_size", 15)
 	save_btn.pressed.connect(_save_scene)
 	components_container.add_child(save_btn)
 	
 	var load_btn = Button.new()
 	load_btn.text = "📂 ЗАГРУЗИТЬ"
-	load_btn.custom_minimum_size = Vector2(180, 45)
+	load_btn.custom_minimum_size = Vector2(220, 50)
+	load_btn.add_theme_font_size_override("font_size", 15)
 	load_btn.pressed.connect(_load_scene)
 	components_container.add_child(load_btn)
 	
 	var clear_btn = Button.new()
 	clear_btn.text = "🗑️ ОЧИСТИТЬ ВСЁ"
-	clear_btn.custom_minimum_size = Vector2(180, 45)
+	clear_btn.custom_minimum_size = Vector2(220, 50)
+	clear_btn.add_theme_font_size_override("font_size", 15)
 	clear_btn.pressed.connect(_clear_all)
 	components_container.add_child(clear_btn)
 	
 	var zoom_in_btn = Button.new()
 	zoom_in_btn.text = "+ ПРИБЛИЗИТЬ"
-	zoom_in_btn.custom_minimum_size = Vector2(180, 45)
+	zoom_in_btn.custom_minimum_size = Vector2(220, 50)
+	zoom_in_btn.add_theme_font_size_override("font_size", 15)
 	zoom_in_btn.pressed.connect(_zoom_in)
 	components_container.add_child(zoom_in_btn)
 	
 	var zoom_out_btn = Button.new()
 	zoom_out_btn.text = "- ОТДАЛИТЬ"
-	zoom_out_btn.custom_minimum_size = Vector2(180, 45)
+	zoom_out_btn.custom_minimum_size = Vector2(220, 50)
+	zoom_out_btn.add_theme_font_size_override("font_size", 15)
 	zoom_out_btn.pressed.connect(_zoom_out)
 	components_container.add_child(zoom_out_btn)
 
@@ -434,7 +517,7 @@ func _deactivate_wire_mode():
 	if temp_wire:
 		temp_wire.queue_free()
 		temp_wire = null
-	print("🔌 Режим проводов ВЫКЛЮЧЕН! Теперь можно перемещаться по полю.")
+	print("🔌 Режим проводов ВЫКЛЮЧЕН!")
 	_show_notification("🔌 Режим проводов выключен")
 
 func _start_create_component(comp_type):
@@ -455,8 +538,8 @@ func _activate_wire_mode():
 		temp_wire = null
 	print("🔌 РЕЖИМ ПРОВОДОВ ВКЛЮЧЁН!")
 	_show_notification("🔌 Режим проводов включён")
+
 func _activate_delete_mode():
-	# Выключаем другие режимы
 	is_wire_mode = false
 	wire_start_component = null
 	pending_component_type = null
@@ -465,61 +548,100 @@ func _activate_delete_mode():
 		temp_wire = null
 	
 	is_delete_mode = true
-	print("🗑️ РЕЖИМ УДАЛЕНИЯ ВКЛЮЧЁН! Нажми на компонент, чтобы удалить его.")
-	_show_notification("🗑️ Режим удаления включён. Нажми на компонент для удаления.")
+	print("🗑️ РЕЖИМ УДАЛЕНИЯ ВКЛЮЧЁН!")
+	_show_notification("🗑️ Режим удаления включён")
 
 func _deactivate_delete_mode():
 	is_delete_mode = false
 	print("✅ РЕЖИМ УДАЛЕНИЯ ВЫКЛЮЧЕН")
 	_show_notification("✅ Режим удаления выключен")
+
+func _cleanup_invalid_references():
+	# Очищаем компоненты
+	for i in range(components.size() - 1, -1, -1):
+		if not is_instance_valid(components[i]):
+			components.remove_at(i)
+	
+	# Очищаем провода
+	for i in range(wires.size() - 1, -1, -1):
+		if not is_instance_valid(wires[i].from) or not is_instance_valid(wires[i].to):
+			if wires[i].line and is_instance_valid(wires[i].line):
+				wires[i].line.queue_free()
+			wires.remove_at(i)
+	
+	# Сбрасываем selected_component если он мёртв
+	if selected_component and not is_instance_valid(selected_component):
+		selected_component = null
+	
+	# Сбрасываем wire_start_component если он мёртв
+	if wire_start_component and not is_instance_valid(wire_start_component):
+		wire_start_component = null
+
 func _input(event):
+	# === ОБРАБОТКА МЫШИ И ТАЧПАДА ===
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				_on_click(event.position)
 			else:
 				_on_release()
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			var world_pos = get_global_mouse_position()
+			var clicked = get_component_at_position(world_pos)
+			if clicked and clicked.has_method("_open_voltage_menu"):
+				clicked._open_voltage_menu()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_zoom(0.1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom(-0.1)
+	
+	# === ДВИЖЕНИЕ МЫШИ/ТАЧПАДА ===
 	elif event is InputEventMouseMotion:
-		# В режиме проводов и есть начатый провод - рисуем временный провод
 		if is_wire_mode and wire_start_component:
 			_update_temp_wire(event.position)
 		
-		# Перетаскивание компонента
 		if is_dragging and selected_component:
 			var new_pos = get_global_mouse_position()
 			selected_component.global_position = new_pos
 			_update_all_wires()
-		# Перемещение камеры
-		elif is_panning and camera and not (is_wire_mode and wire_start_component):
+		elif is_panning and camera:
+			camera.position -= event.relative / camera.zoom
+	
+	# === ТАЧ-УПРАВЛЕНИЕ ДЛЯ МОБИЛЬНЫХ ===
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			_on_click(event.position)
+		else:
+			_on_release()
+	
+	elif event is InputEventScreenDrag:
+		if is_dragging and selected_component:
+			var new_pos = get_global_mouse_position()
+			selected_component.global_position = new_pos
+			_update_all_wires()
+		elif is_panning:
 			camera.position -= event.relative / camera.zoom
 
 func _on_click(screen_pos):
 	var world_pos = get_global_mouse_position()
 	var clicked = get_component_at_position(world_pos)
 	
-	# === РЕЖИМ УДАЛЕНИЯ (ПРИОРИТЕТ) ===
 	if is_delete_mode:
 		if clicked:
 			_delete_component(clicked)
-			print("🗑️ Удалён компонент: ", clicked.name)
 			_show_notification("🗑️ Удалён: " + clicked.name)
 		return
 	
-	# === РЕЖИМ ПРОВОДОВ ===
 	if is_wire_mode:
 		if clicked:
 			if not wire_start_component:
 				wire_start_component = clicked
-				print("📌 Выбран компонент: ", wire_start_component.name)
+				_show_notification("📌 Выбран компонент: " + clicked.name)
 			else:
 				if wire_start_component != clicked:
 					_create_wire(wire_start_component, clicked)
 				else:
-					print("⚠️ Нельзя соединить компонент сам с собой")
+					_show_notification("⚠️ Нельзя соединить компонент сам с собой")
 				wire_start_component = null
 				if temp_wire:
 					temp_wire.queue_free()
@@ -532,14 +654,12 @@ func _on_click(screen_pos):
 					temp_wire = null
 		return
 	
-	# === РЕЖИМ СОЗДАНИЯ КОМПОНЕНТОВ ===
 	if pending_component_type != null:
 		if not clicked:
 			_create_component(pending_component_type, world_pos)
 			pending_component_type = null
 		return
 	
-	# === ОБЫЧНЫЙ РЕЖИМ ===
 	if clicked:
 		if selected_component and selected_component != clicked:
 			if selected_component.has_method("deselect"):
@@ -554,8 +674,12 @@ func _on_click(screen_pos):
 			if selected_component.has_method("deselect"):
 				selected_component.deselect()
 			selected_component = null
+
 func _delete_component(component):
-	# Удаляем все провода, связанные с этим компонентом
+	if not is_instance_valid(component):
+		print("⚠️ Компонент уже удалён")
+		return
+	
 	var wires_to_remove = []
 	for wire in wires:
 		if wire.from == component or wire.to == component:
@@ -566,20 +690,21 @@ func _delete_component(component):
 			wire.line.queue_free()
 		wires.erase(wire)
 	
-	# Удаляем сам компонент
-	if is_instance_valid(component):
-		component.queue_free()
-	
-	# Удаляем из списка компонентов
-	components.erase(component)
-	
-	# Если удалённый компонент был выбран - сбрасываем выделение
 	if selected_component == component:
 		selected_component = null
 	
-	# Обновляем симуляцию и сохраняем
+	if wire_start_component == component:
+		wire_start_component = null
+	
+	if is_instance_valid(component):
+		component.queue_free()
+	
+	components.erase(component)
+	
 	update_simulation()
 	_save_scene()
+	
+	print("🗑️ Компонент удалён, осталось компонентов: ", components.size())
 
 func _on_release():
 	is_dragging = false
@@ -601,6 +726,8 @@ func _create_component(comp_type, pos):
 	_save_scene()
 
 func _on_component_clicked(comp):
+	if not is_instance_valid(comp):
+		return
 	if selected_component:
 		if selected_component.has_method("deselect"):
 			selected_component.deselect()
@@ -663,6 +790,9 @@ func _update_all_wires():
 func get_component_at_position(pos):
 	for i in range(components.size() - 1, -1, -1):
 		var comp = components[i]
+		if not is_instance_valid(comp):
+			components.erase(comp)
+			continue
 		var dist = pos.distance_to(comp.global_position)
 		if dist < 50:
 			return comp
@@ -684,10 +814,11 @@ func _save_scene():
 		"wires": [],
 		"camera_pos": [camera.position.x, camera.position.y] if camera else [0, 0],
 		"camera_zoom": zoom_level,
+		"music_volume": music_volume,  # <-- ДОБАВЬ
+		"is_music_on": is_music_on,    # <-- ДОБАВЬ
 		"saved_at": Time.get_datetime_string_from_system()
 	}
 	
-	# Добавляем позиции панелей
 	if tools_panel:
 		save_data["tools_panel_pos"] = [tools_panel.position.x, tools_panel.position.y]
 	if info_panel:
@@ -731,7 +862,6 @@ func _load_scene():
 		print("❌ Путь сохранения не установлен!")
 		return
 	
-	
 	print("========== ЗАГРУЗКА ==========")
 	print("Игра: ", current_game_name)
 	
@@ -749,6 +879,27 @@ func _load_scene():
 		print("❌ Ошибка парсинга!")
 		_show_notification("❌ ОШИБКА ЗАГРУЗКИ")
 		return
+	if save_data.has("music_volume"):
+		music_volume = save_data["music_volume"]
+		if music_player:
+			music_player.volume_db = music_volume
+	if save_data.has("is_music_on"):
+		is_music_on = save_data["is_music_on"]
+		if music_player:
+			if is_music_on:
+				music_player.volume_db = music_volume
+			else:
+				music_player.volume_db = -80
+		
+		# Обновляем интерфейс
+		var music_panel = get_node_or_null("MusicPanel")
+		if music_panel:
+			var toggle_btn = music_panel.get_node_or_null("ToggleButton")
+			if toggle_btn:
+				toggle_btn.text = "🔊" if is_music_on else "🔇"
+			var volume_slider = music_panel.get_node_or_null("VolumeSlider")
+			if volume_slider:
+				volume_slider.value = music_volume	
 	
 	print("Время сохранения: ", save_data.get("saved_at", "неизвестно"))
 	
@@ -832,6 +983,8 @@ func _load_scene():
 # ============ ФИЗИКА ЦЕПИ ============
 
 func _update_simulation():
+	_cleanup_invalid_references()
+	
 	print("\n========== ОБНОВЛЕНИЕ СИМУЛЯЦИИ ==========")
 	
 	for wire in wires:
@@ -904,11 +1057,20 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		"voltmeter_voltages": []
 	}
 	
+	# Проверяем, что батарейка ещё существует
+	if not is_instance_valid(battery):
+		return result
+	
 	var connections = battery.get_meta("connections", [])
 	print("   Подключено проводов к батарейке: ", connections.size())
 	
 	if connections.size() < 2:
 		print("   ❌ Недостаточно проводов!")
+		return result
+	
+	# Проверяем, что оба контакта ещё существуют
+	if not is_instance_valid(connections[0]) or not is_instance_valid(connections[1]):
+		print("   ❌ Один из контактов батарейки не существует!")
 		return result
 	
 	var all_paths = _find_all_paths_from_to(connections[0], connections[1], battery)
@@ -922,6 +1084,8 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 	var all_switches_on = true
 	for path in all_paths:
 		for comp in path:
+			if not is_instance_valid(comp):
+				continue
 			if comp.name.to_lower().contains("switch"):
 				var is_on = _get_switch_state(comp)
 				print("   🔘 Выключатель ", comp.name, " = ", "ON" if is_on else "OFF")
@@ -946,6 +1110,8 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		var comp_list = []
 		print("   Путь ", path_resistances.size() + 1, ":")
 		for comp in path:
+			if not is_instance_valid(comp):
+				continue
 			var r = _get_resistance(comp)
 			print("      ", comp.name, ": R=", r, " Ω")
 			if r > 0 and r < 999999:
@@ -989,6 +1155,8 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 			print("   🌿 Ветвь ", i+1, ": I = ", branch_current, " A, U = ", total_voltage, " V")
 			
 			for comp in branch_comps:
+				if not is_instance_valid(comp):
+					continue
 				var r = _get_resistance(comp)
 				if r > 0 and r < 999999:
 					var comp_voltage = branch_current * r
@@ -1007,6 +1175,8 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		print("   📊 Последовательная цепь: ток = ", current, " A")
 		
 		for comp in main_path:
+			if not is_instance_valid(comp):
+				continue
 			var r = _get_resistance(comp)
 			if r > 0 and r < 999999:
 				var comp_voltage = current * r
@@ -1023,11 +1193,14 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		
 		var voltage_sum = 0.0
 		for comp in main_path:
+			if not is_instance_valid(comp):
+				continue
 			voltage_sum += result.component_voltages.get(comp, 0.0)
 		print("   🔍 Проверка: сумма напряжений = ", voltage_sum, " V (должно быть ~", total_voltage, " V)")
 	
-	# Обновляем амперметры
 	for comp in components:
+		if not is_instance_valid(comp):
+			continue
 		if comp.name.to_lower().contains("ammeter"):
 			var current = result.component_currents.get(comp, 0.0)
 			result.ammeter_currents.append({
@@ -1038,14 +1211,17 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 				comp.update_state(current)
 				print("   🔧 Амперметр ", comp.name, " = ", current, " A")
 	
-	# Обновляем вольтметры
 	for comp in components:
+		if not is_instance_valid(comp):
+			continue
 		if comp.name.to_lower().contains("voltmeter"):
 			var volt_connections = comp.get_meta("connections", [])
 			var target_component = null
 			var target_voltage = total_voltage
 			
 			for conn in volt_connections:
+				if not is_instance_valid(conn):
+					continue
 				if conn != battery and not conn.name.to_lower().contains("switch"):
 					target_component = conn
 					break
@@ -1066,6 +1242,95 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 	result.is_closed = true
 	return result
 
+func _create_music_panel():
+	var music_panel = Panel.new()
+	music_panel.name = "MusicPanel"
+	music_panel.position = Vector2(get_viewport().size.x - 250, get_viewport().size.y - 120)
+	music_panel.size = Vector2(240, 70)
+	add_child(music_panel)
+	
+	# Стилизация панели
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.05, 0.1, 0.9)
+	panel_style.set_border_width_all(1)
+	panel_style.border_color = Color(0.4, 0.6, 0.9, 1)
+	panel_style.set_corner_radius_all(10)
+	music_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	var hbox = HBoxContainer.new()
+	hbox.position = Vector2(10, 10)
+	hbox.size = Vector2(220, 50)
+	music_panel.add_child(hbox)
+	
+	# Кнопка вкл/выкл
+	var toggle_btn = Button.new()
+	toggle_btn.text = "🔊"
+	toggle_btn.custom_minimum_size = Vector2(45, 45)
+	toggle_btn.add_theme_font_size_override("font_size", 20)
+	toggle_btn.pressed.connect(_toggle_music)
+	hbox.add_child(toggle_btn)
+	
+	# Слайдер громкости
+	var volume_slider = HSlider.new()
+	volume_slider.min_value = -30
+	volume_slider.max_value = 0
+	volume_slider.value = music_volume
+	volume_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	volume_slider.custom_minimum_size = Vector2(100, 30)
+	volume_slider.value_changed.connect(_set_music_volume)
+	hbox.add_child(volume_slider)
+	
+	# Индикатор громкости
+	var volume_label = Label.new()
+	volume_label.text = str(int(music_volume)) + " dB"
+	volume_label.custom_minimum_size = Vector2(45, 45)
+	volume_label.add_theme_font_size_override("font_size", 12)
+	volume_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1, 1))
+	hbox.add_child(volume_label)
+	
+	# Сохраняем ссылки для обновления
+	volume_slider.name = "VolumeSlider"
+	volume_label.name = "VolumeLabel"
+	toggle_btn.name = "ToggleButton"
+	
+	# Обновляем положение при изменении размера окна
+	get_viewport().size_changed.connect(_update_music_panel_position)
+
+func _update_music_panel_position():
+	var music_panel = get_node_or_null("MusicPanel")
+	if music_panel:
+		music_panel.position = Vector2(get_viewport().size.x - 260, get_viewport().size.y - 120)
+
+func _toggle_music():
+	var music_panel = get_node_or_null("MusicPanel")
+	if music_panel:
+		var toggle_btn = music_panel.get_node_or_null("ToggleButton")
+		if music_player:
+			if is_music_on:
+				music_player.volume_db = -80  # Практически беззвучно
+				is_music_on = false
+				if toggle_btn:
+					toggle_btn.text = "🔇"
+				_show_notification("🔇 Музыка выключена")
+			else:
+				music_player.volume_db = music_volume
+				is_music_on = true
+				if toggle_btn:
+					toggle_btn.text = "🔊"
+				_show_notification("🔊 Музыка включена")
+
+func _set_music_volume(value: float):
+	music_volume = value
+	if music_player and is_music_on:
+		music_player.volume_db = music_volume
+	
+	# Обновляем надпись
+	var music_panel = get_node_or_null("MusicPanel")
+	if music_panel:
+		var volume_label = music_panel.get_node_or_null("VolumeLabel")
+		if volume_label:
+			volume_label.text = str(int(music_volume)) + " dB"
+
 func _find_all_paths_from_to(start, target, avoid) -> Array:
 	var all_paths = []
 	var queue = [[start]]
@@ -1074,6 +1339,10 @@ func _find_all_paths_from_to(start, target, avoid) -> Array:
 	while queue.size() > 0:
 		var path = queue.pop_front()
 		var current = path[-1]
+		
+		# Проверяем, что текущий компонент существует
+		if not is_instance_valid(current):
+			continue
 		
 		if current == target:
 			var is_duplicate = false
@@ -1092,8 +1361,12 @@ func _find_all_paths_from_to(start, target, avoid) -> Array:
 				visited_paths.append(path)
 			continue
 		
+		# Проверяем наличие метаданных
 		if current.has_meta("connections"):
-			for conn in current.get_meta("connections"):
+			var conns = current.get_meta("connections")
+			for conn in conns:
+				if not is_instance_valid(conn):
+					continue
 				if conn != avoid and conn not in path:
 					var new_path = path.duplicate()
 					new_path.append(conn)
@@ -1102,11 +1375,15 @@ func _find_all_paths_from_to(start, target, avoid) -> Array:
 	return all_paths
 
 func _get_battery_voltage(battery) -> float:
+	if not is_instance_valid(battery):
+		return 9.0
 	if battery.has_method("get_voltage"):
 		return battery.get_voltage()
 	return 9.0
 
 func _get_switch_state(switch_comp) -> bool:
+	if not is_instance_valid(switch_comp):
+		return true
 	if switch_comp.has_method("is_switch_on"):
 		return switch_comp.is_switch_on()
 	elif switch_comp.has_meta("is_on"):
@@ -1114,6 +1391,8 @@ func _get_switch_state(switch_comp) -> bool:
 	return true
 
 func _get_resistance(comp) -> float:
+	if not is_instance_valid(comp):
+		return 0.0
 	var name = comp.name.to_lower()
 	if name.contains("bulb"):
 		return 100.0
@@ -1128,17 +1407,6 @@ func _get_resistance(comp) -> float:
 	elif name.contains("voltmeter"):
 		return 1000000.0
 	return 0.0
-
-func _light_wire(comp1, comp2, current: float):
-	for wire in wires:
-		if (wire.from == comp1 and wire.to == comp2) or (wire.from == comp2 and wire.to == comp1):
-			if wire.line:
-				if current > 0:
-					var intensity = clamp(current * 0.3, 0.2, 1.0)
-					wire.line.default_color = Color(1.0, intensity * 0.5, 0.2, 1.0)
-				else:
-					wire.line.default_color = Color(0.5, 0.5, 0.5, 0.8)
-			return
 
 func _clear_all():
 	for comp in components:

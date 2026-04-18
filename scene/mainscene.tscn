@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://rtwgqh3jjscx"]
+[gd_scene load_steps=10 format=3 uid="uid://rtwgqh3jjscx"]
 
 [ext_resource type="Script" uid="uid://bafrgqmoxo0df" path="res://script/mainButton.gd" id="1_4ulk4"]
+[ext_resource type="Script" uid="uid://0k1icomhs3pb" path="res://script/mainMenuScript.gd" id="1_nx0of"]
 [ext_resource type="Texture2D" uid="uid://e120quphr4q0" path="res://pic/fon.png" id="1_siadl"]
 [ext_resource type="Texture2D" uid="uid://c7vobo2h8v0cn" path="res://pic/button.png" id="3_8ajfr"]
 [ext_resource type="FontFile" uid="uid://c3sk47csoucsm" path="res://fonts/Serati-Regular.otf" id="3_j2iek"]
@@ -12,6 +13,7 @@
 load_path = "res://.godot/imported/ButtonQuit.jpg-4abd61f01143b3af242de6d86259fec5.ctex"
 
 [node name="Node2D" type="Node2D"]
+script = ExtResource("1_nx0of")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
