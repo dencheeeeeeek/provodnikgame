@@ -14,8 +14,17 @@ var template_scene_path = "res://scene/createScene.tscn"
 # Загружаем шрифт
 var custom_font = preload("res://fonts/Jovanny Lemonad - Bender-Bold.otf")
 
+# === ПЕРЕМЕННЫЕ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
+var is_touch_mode = false
+
 func _ready():
 	create_games_folder()
+	
+	# Настройка для мобильных устройств
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+		is_touch_mode = true
+		_setup_mobile_ui()
+		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
 	
 	# ВРЕМЕННО: исправляем старые игры (потом удали эту строку)
 	fix_existing_games()
@@ -38,6 +47,24 @@ func _ready():
 	print("Файл шаблона: ", template_scene_path)
 	print("Шаблон существует: ", FileAccess.file_exists(template_scene_path))
 
+func _setup_mobile_ui():
+	# Увеличиваем кнопки для удобного нажатия пальцем
+	if import_button:
+		import_button.custom_minimum_size = Vector2(200, 60)
+		import_button.add_theme_font_size_override("font_size", 18)
+	
+	if back_button:
+		back_button.custom_minimum_size = Vector2(200, 60)
+		back_button.add_theme_font_size_override("font_size", 18)
+	
+	if new_game_button:
+		new_game_button.custom_minimum_size = Vector2(200, 60)
+		new_game_button.add_theme_font_size_override("font_size", 18)
+	
+	# Увеличиваем контейнер для списка игр
+	if games_container:
+		games_container.custom_minimum_size = Vector2(350, 400)
+
 func create_games_folder():
 	var dir = DirAccess.open("res://")
 	if dir and not dir.dir_exists("user_games"):
@@ -53,18 +80,23 @@ func _on_new_game_pressed():
 func show_name_dialog():
 	var dialog = Window.new()
 	dialog.title = ""
-	dialog.size = Vector2(450, 420)  # Увеличил высоту
+	
+	# Адаптивный размер под разные устройства
+	var window_width = 450 if not is_touch_mode else 400
+	var window_height = 420 if not is_touch_mode else 380
+	
+	dialog.size = Vector2(window_width, window_height)
 	dialog.exclusive = true
 	dialog.transient = true
 	dialog.popup_centered()
 	
-	# Убираем стандартную рамку и делаем красивое окно
+	# Убираем стандартную рамку
 	dialog.unresizable = true
 	dialog.borderless = true
 	
 	# Создаём основной фон
 	var main_panel = Panel.new()
-	main_panel.size = Vector2(430, 400)
+	main_panel.size = Vector2(window_width - 20, window_height - 20)
 	main_panel.position = Vector2(10, 10)
 	
 	var panel_style = StyleBoxFlat.new()
@@ -79,7 +111,7 @@ func show_name_dialog():
 	
 	# Заголовок
 	var title_panel = Panel.new()
-	title_panel.size = Vector2(430, 50)
+	title_panel.size = Vector2(main_panel.size.x, 50)
 	title_panel.position = Vector2(0, 0)
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = Color(0.15, 0.15, 0.25, 1)
@@ -93,16 +125,16 @@ func show_name_dialog():
 	var title_label = Label.new()
 	title_label.text = "✨ СОЗДАНИЕ НОВОЙ ИГРЫ ✨"
 	title_label.position = Vector2(65, 12)
-	title_label.size = Vector2(300, 30)
+	title_label.size = Vector2(main_panel.size.x - 130, 30)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 18)
+	title_label.add_theme_font_size_override("font_size", 16 if is_touch_mode else 18)
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
 	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
-	close_btn.position = Vector2(395, 10)
+	close_btn.position = Vector2(main_panel.size.x - 35, 10)
 	close_btn.size = Vector2(30, 30)
 	close_btn.add_theme_font_size_override("font_size", 18)
 	close_btn.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
@@ -122,61 +154,51 @@ func show_name_dialog():
 	)
 	title_panel.add_child(close_btn)
 	
-	# Основной контейнер с отступами
+	# Основной контейнер
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 40)
-	margin.add_theme_constant_override("margin_right", 40)
-	margin.add_theme_constant_override("margin_top", 30)
-	margin.add_theme_constant_override("margin_bottom", 30)
-	margin.size = Vector2(430, 400)
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_right", 30)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.size = main_panel.size
 	margin.position = Vector2(0, 0)
 	main_panel.add_child(margin)
 	
 	var vbox = VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 20)
+	vbox.add_theme_constant_override("separation", 15)
 	margin.add_child(vbox)
 	
-	# Пустое место сверху
-	var top_spacer = Control.new()
-	top_spacer.custom_minimum_size = Vector2(0, 10)
-	vbox.add_child(top_spacer)
-	
-	# Иконка (опущена ниже)
+	# Иконка
 	var icon_container = CenterContainer.new()
 	icon_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(icon_container)
 	
 	var icon_label = Label.new()
 	icon_label.text = "🎮"
-	icon_label.add_theme_font_size_override("font_size", 40)
+	icon_label.add_theme_font_size_override("font_size", 36 if is_touch_mode else 40)
 	icon_container.add_child(icon_label)
 	
 	# Отступ после иконки
 	var icon_spacer = Control.new()
-	icon_spacer.custom_minimum_size = Vector2(8, 2)
+	icon_spacer.custom_minimum_size = Vector2(0, 5)
 	vbox.add_child(icon_spacer)
 	
 	# Текст
 	var info_label = Label.new()
 	info_label.text = "Введите название вашей игры:"
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_font_size_override("font_size", 15)
+	info_label.add_theme_font_size_override("font_size", 14 if is_touch_mode else 15)
 	info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1, 1))
 	vbox.add_child(info_label)
-	
-	# Отступ перед полем ввода
-	var input_spacer = Control.new()
-	input_spacer.custom_minimum_size = Vector2(0, 0)
-	vbox.add_child(input_spacer)
 	
 	# Поле ввода
 	var line_edit = LineEdit.new()
 	line_edit.placeholder_text = "   Название игры"
 	line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line_edit.custom_minimum_size = Vector2(352, 45)
-	line_edit.add_theme_font_size_override("font_size", 16)
+	line_edit.custom_minimum_size = Vector2(300, 45 if is_touch_mode else 45)
+	line_edit.add_theme_font_size_override("font_size", 15 if is_touch_mode else 16)
 	
 	var line_style = StyleBoxFlat.new()
 	line_style.bg_color = Color(0.15, 0.15, 0.2, 1)
@@ -191,24 +213,19 @@ func show_name_dialog():
 	
 	vbox.add_child(line_edit)
 	
-	# Отступ перед кнопками
-	var button_spacer = Control.new()
-	button_spacer.custom_minimum_size = Vector2(0, 20)
-	vbox.add_child(button_spacer)
-	
 	# Кнопки
 	var buttons_container = CenterContainer.new()
 	buttons_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(buttons_container)
 	
 	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 30)
+	hbox.add_theme_constant_override("separation", 20)
 	buttons_container.add_child(hbox)
 	
 	var create_btn = Button.new()
 	create_btn.text = "✅ СОЗДАТЬ"
-	create_btn.custom_minimum_size = Vector2(150, 50)
-	create_btn.add_theme_font_size_override("font_size", 16)
+	create_btn.custom_minimum_size = Vector2(130 if is_touch_mode else 150, 45)
+	create_btn.add_theme_font_size_override("font_size", 14 if is_touch_mode else 16)
 	
 	var create_style = StyleBoxFlat.new()
 	create_style.bg_color = Color(0.2, 0.5, 0.2, 1)
@@ -226,8 +243,8 @@ func show_name_dialog():
 	
 	var cancel_btn = Button.new()
 	cancel_btn.text = "❌ ОТМЕНА"
-	cancel_btn.custom_minimum_size = Vector2(150, 50)
-	cancel_btn.add_theme_font_size_override("font_size", 16)
+	cancel_btn.custom_minimum_size = Vector2(130 if is_touch_mode else 150, 45)
+	cancel_btn.add_theme_font_size_override("font_size", 14 if is_touch_mode else 16)
 	
 	var cancel_style = StyleBoxFlat.new()
 	cancel_style.bg_color = Color(0.5, 0.2, 0.2, 1)
@@ -508,11 +525,9 @@ func load_games_list():
 		print("❌ GamesContainer не найден!")
 		return
 	
-	# Очищаем контейнер
 	for child in games_container.get_children():
 		child.queue_free()
 	
-	# Загружаем список игр
 	var games = []
 	if FileAccess.file_exists(games_list_path):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
@@ -525,7 +540,6 @@ func load_games_list():
 		_show_empty_message()
 		return
 	
-	# ФИЛЬТРУЕМ: показываем только созданные игры (type == "created")
 	var created_games = []
 	for game in games:
 		if game.get("type") == "created":
@@ -537,6 +551,7 @@ func load_games_list():
 		_show_empty_message()
 		return
 	
+	# Добавляем ScrollContainer для прокрутки на мобильных устройствах
 	var scroll_container = ScrollContainer.new()
 	scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -569,7 +584,7 @@ func _show_empty_message():
 	
 	if custom_font:
 		label.add_theme_font_override("font", custom_font)
-		label.add_theme_font_size_override("font_size", 20)
+		label.add_theme_font_size_override("font_size", 18 if is_touch_mode else 20)
 		label.add_theme_color_override("font_color", Color.GRAY)
 	
 	var center = CenterContainer.new()
@@ -589,23 +604,31 @@ func add_game_item(parent: VBoxContainer, game: Dictionary):
 	
 	if custom_font:
 		game_button.add_theme_font_override("font", custom_font)
+	
+	# Адаптивные размеры для мобильных устройств
+	if is_touch_mode:
+		game_button.add_theme_font_size_override("font_size", 20)
+		game_button.custom_minimum_size = Vector2(280, 60)
+	else:
 		game_button.add_theme_font_size_override("font_size", 24)
+		game_button.custom_minimum_size = Vector2(250, 50)
 	
 	game_button.add_theme_color_override("font_color", Color.WHITE)
 	game_button.add_theme_color_override("font_hover_color", Color.YELLOW)
-	game_button.custom_minimum_size = Vector2(250, 50)
 	game_button.pressed.connect(_on_game_selected.bind(game["file"]))
 	
 	var delete_button = Button.new()
 	delete_button.text = "🗑️"
 	
-	if custom_font:
-		delete_button.add_theme_font_override("font", custom_font)
+	if is_touch_mode:
+		delete_button.add_theme_font_size_override("font_size", 20)
+		delete_button.custom_minimum_size = Vector2(80, 60)
+	else:
 		delete_button.add_theme_font_size_override("font_size", 24)
+		delete_button.custom_minimum_size = Vector2(60, 50)
 	
 	delete_button.add_theme_color_override("font_color", Color.RED)
 	delete_button.add_theme_color_override("font_hover_color", Color.WHITE)
-	delete_button.custom_minimum_size = Vector2(60, 50)
 	delete_button.pressed.connect(_on_delete_game.bind(game["file"], game["name"]))
 	
 	item_container.add_child(game_button)
@@ -621,8 +644,6 @@ func _on_game_selected(game_file: String):
 	print("🎮 Запуск свободного режима: ", scene_path)
 	
 	if FileAccess.file_exists(scene_path):
-		# Проверяем, существует ли Глобальный скрипт GameState
-		# и ставим уровень 0 (Свободный мир)
 		if has_node("/root/GameState"):
 			get_node("/root/GameState").current_level = 0
 			print("Установлен режим: Свободный мир (0)")

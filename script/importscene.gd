@@ -8,8 +8,18 @@ extends Node2D
 var games_list_path = "res://user_games/imported_games.json"
 var games_folder = "res://user_games/"
 
+# === ПЕРЕМЕННЫЕ ДЛЯ ТАЧ-УПРАВЛЕНИЯ ===
+var touch_points = {}
+var is_touch_mode = false
+
 func _ready():
 	create_games_folder()
+	
+	# Настройка для мобильных устройств
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+		is_touch_mode = true
+		_setup_mobile_ui()
+		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
 	
 	if import_button:
 		import_button.pressed.connect(_on_import_pressed)
@@ -19,8 +29,22 @@ func _ready():
 	
 	load_games_list()
 	
-	# Диагностика - показываем содержимое папки
+	# Диагностика
 	diagnose_folder()
+
+func _setup_mobile_ui():
+	# Увеличиваем кнопки для удобного нажатия пальцем
+	if import_button:
+		import_button.custom_minimum_size = Vector2(200, 60)
+		import_button.add_theme_font_size_override("font_size", 18)
+	
+	if back_button:
+		back_button.custom_minimum_size = Vector2(200, 60)
+		back_button.add_theme_font_size_override("font_size", 18)
+	
+	# Увеличиваем размер контейнера для списка
+	if games_container:
+		games_container.custom_minimum_size = Vector2(350, 400)
 
 func diagnose_folder():
 	print("=== ДИАГНОСТИКА ===")
@@ -65,6 +89,10 @@ func _on_import_pressed():
 	file_dialog.title = "Выберите сцену игры (.tscn)"
 	file_dialog.add_filter("*.tscn", "Godot Scene")
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	
+	# Для мобильных устройств увеличиваем размер диалога
+	if is_touch_mode:
+		file_dialog.size = Vector2(400, 500)
 	
 	file_dialog.current_dir = "res://"
 	
@@ -181,6 +209,11 @@ func load_games_list():
 		show_empty_message()
 		return
 	
+	# Добавляем ScrollContainer для прокрутки на мобильных устройствах
+	var scroll_container = ScrollContainer.new()
+	scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
 	var vertical_container = VBoxContainer.new()
 	vertical_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vertical_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -189,14 +222,15 @@ func load_games_list():
 	for game in imported_games:
 		add_game_item(vertical_container, game)
 	
-	games_container.add_child(vertical_container)
+	scroll_container.add_child(vertical_container)
+	games_container.add_child(scroll_container)
 
 func show_empty_message():
 	var label = Label.new()
 	label.text = "Нет импортированных игр\nНажмите 'Импорт' чтобы добавить"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_font_size_override("font_size", 20 if not is_touch_mode else 18)
 	label.add_theme_color_override("font_color", Color.GRAY)
 	
 	var center = CenterContainer.new()
@@ -213,18 +247,31 @@ func add_game_item(parent: VBoxContainer, game: Dictionary):
 	
 	var game_button = Button.new()
 	game_button.text = game["name"]
-	game_button.add_theme_font_size_override("font_size", 24)
+	
+	# Адаптивные размеры для мобильных устройств
+	if is_touch_mode:
+		game_button.add_theme_font_size_override("font_size", 20)
+		game_button.custom_minimum_size = Vector2(280, 60)
+	else:
+		game_button.add_theme_font_size_override("font_size", 24)
+		game_button.custom_minimum_size = Vector2(250, 50)
+	
 	game_button.add_theme_color_override("font_color", Color.WHITE)
 	game_button.add_theme_color_override("font_hover_color", Color.YELLOW)
-	game_button.custom_minimum_size = Vector2(250, 50)
 	game_button.pressed.connect(_on_game_selected.bind(game["file"]))
 	
 	var delete_button = Button.new()
 	delete_button.text = "🗑️"
-	delete_button.add_theme_font_size_override("font_size", 24)
+	
+	if is_touch_mode:
+		delete_button.add_theme_font_size_override("font_size", 20)
+		delete_button.custom_minimum_size = Vector2(80, 60)
+	else:
+		delete_button.add_theme_font_size_override("font_size", 24)
+		delete_button.custom_minimum_size = Vector2(60, 50)
+	
 	delete_button.add_theme_color_override("font_color", Color.RED)
 	delete_button.add_theme_color_override("font_hover_color", Color.WHITE)
-	delete_button.custom_minimum_size = Vector2(60, 50)
 	delete_button.pressed.connect(_on_delete_game.bind(game["file"], game["name"]))
 	
 	item_container.add_child(game_button)
@@ -232,7 +279,7 @@ func add_game_item(parent: VBoxContainer, game: Dictionary):
 	parent.add_child(item_container)
 	
 	var separator = HSeparator.new()
-	separator.custom_minimum_size = Vector2(300, 2)
+	separator.custom_minimum_size = Vector2(350, 2)
 	parent.add_child(separator)
 
 func _on_game_selected(game_file: String):
@@ -290,8 +337,16 @@ func show_error(message: String):
 	var label = Label.new()
 	label.text = message
 	label.add_theme_color_override("font_color", Color.RED)
-	label.add_theme_font_size_override("font_size", 16)
-	label.position = Vector2(100, 100)
+	label.add_theme_font_size_override("font_size", 16 if not is_touch_mode else 18)
+	label.position = Vector2(get_viewport().size.x / 2 - 150, get_viewport().size.y - 100)
+	label.size = Vector2(300, 50)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	style.set_corner_radius_all(10)
+	label.add_theme_stylebox_override("normal", style)
+	
 	add_child(label)
 	await get_tree().create_timer(2).timeout
 	label.queue_free()
@@ -301,8 +356,16 @@ func show_success(message: String):
 	var label = Label.new()
 	label.text = message
 	label.add_theme_color_override("font_color", Color.GREEN)
-	label.add_theme_font_size_override("font_size", 16)
-	label.position = Vector2(100, 100)
+	label.add_theme_font_size_override("font_size", 16 if not is_touch_mode else 18)
+	label.position = Vector2(get_viewport().size.x / 2 - 150, get_viewport().size.y - 100)
+	label.size = Vector2(300, 50)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	style.set_corner_radius_all(10)
+	label.add_theme_stylebox_override("normal", style)
+	
 	add_child(label)
 	await get_tree().create_timer(2).timeout
 	label.queue_free()

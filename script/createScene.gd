@@ -47,9 +47,9 @@ var is_delete_mode = false
 
 # === ЗАГРУЗКА МУЗЫКИ ===
 var music_player: AudioStreamPlayer
-var music_stream = preload("res://audio/background_music.mp3")  # Укажи свой путь
+var music_stream = preload("res://audio/background_music.mp3")
 var is_music_on = true
-var music_volume = -10  # от -80 до 0, где 0 - максимальная громкость
+var music_volume = -10
 
 # === ПЕРЕМЕННЫЕ ДЛЯ ДОЛГОГО НАЖАТИЯ (МОБИЛЬНЫЕ) ===
 var long_press_timer = 0.0
@@ -85,7 +85,7 @@ func _ready():
 	_create_tool_panel()
 	_create_info_panel()
 	_create_back_button()
-	_create_music_panel()  # <-- ДОБАВЬ ЭТУ СТРОКУ
+	_create_music_panel()
 	add_to_group("circuit")
 	_load_scene()
 	print("✅ Сцена готова! Игра: ", current_game_name)
@@ -299,6 +299,7 @@ func _create_info_panel():
 	info_panel.add_child(info_label)
 	
 	_update_info_panel()
+
 func _music_init():
 	music_player = AudioStreamPlayer.new()
 	music_player.stream = music_stream
@@ -306,11 +307,9 @@ func _music_init():
 	music_player.bus = "Master"
 	add_child(music_player)
 	
-	# Воспроизводим с задержкой для уверенности
 	await get_tree().create_timer(0.5).timeout
 	if music_player:
 		music_player.play()
-		# Зацикливаем
 		music_player.finished.connect(_music_loop)
 
 func _music_loop():
@@ -318,7 +317,6 @@ func _music_loop():
 		music_player.play()
 
 func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
-	# Мышь
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			is_dragging_tools_panel = true
@@ -332,7 +330,6 @@ func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
 		panel.position = new_pos
 	
-	# Тач
 	if event is InputEventScreenTouch and event.pressed:
 		is_dragging_tools_panel = true
 		drag_panel_offset = panel.position - get_global_mouse_position()
@@ -345,7 +342,6 @@ func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 		is_dragging_tools_panel = false
 
 func _on_info_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
-	# Мышь
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			is_dragging_info_panel = true
@@ -359,7 +355,6 @@ func _on_info_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 		new_pos.y = clamp(new_pos.y, 0, get_viewport().size.y - panel.size.y)
 		panel.position = new_pos
 	
-	# Тач
 	if event is InputEventScreenTouch and event.pressed:
 		is_dragging_info_panel = true
 		drag_panel_offset = panel.position - get_global_mouse_position()
@@ -557,28 +552,24 @@ func _deactivate_delete_mode():
 	_show_notification("✅ Режим удаления выключен")
 
 func _cleanup_invalid_references():
-	# Очищаем компоненты
 	for i in range(components.size() - 1, -1, -1):
 		if not is_instance_valid(components[i]):
 			components.remove_at(i)
 	
-	# Очищаем провода
 	for i in range(wires.size() - 1, -1, -1):
 		if not is_instance_valid(wires[i].from) or not is_instance_valid(wires[i].to):
 			if wires[i].line and is_instance_valid(wires[i].line):
 				wires[i].line.queue_free()
 			wires.remove_at(i)
 	
-	# Сбрасываем selected_component если он мёртв
 	if selected_component and not is_instance_valid(selected_component):
 		selected_component = null
 	
-	# Сбрасываем wire_start_component если он мёртв
 	if wire_start_component and not is_instance_valid(wire_start_component):
 		wire_start_component = null
 
 func _input(event):
-	# === ОБРАБОТКА МЫШИ И ТАЧПАДА ===
+	# === МЫШЬ И ТАЧПАД ===
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -595,7 +586,6 @@ func _input(event):
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom(-0.1)
 	
-	# === ДВИЖЕНИЕ МЫШИ/ТАЧПАДА ===
 	elif event is InputEventMouseMotion:
 		if is_wire_mode and wire_start_component:
 			_update_temp_wire(event.position)
@@ -610,17 +600,95 @@ func _input(event):
 	# === ТАЧ-УПРАВЛЕНИЕ ДЛЯ МОБИЛЬНЫХ ===
 	elif event is InputEventScreenTouch:
 		if event.pressed:
-			_on_click(event.position)
+			_on_touch_press(event.position)
 		else:
 			_on_release()
+			long_press_active = false
+			long_press_component = null
 	
 	elif event is InputEventScreenDrag:
-		if is_dragging and selected_component:
-			var new_pos = get_global_mouse_position()
-			selected_component.global_position = new_pos
-			_update_all_wires()
-		elif is_panning:
-			camera.position -= event.relative / camera.zoom
+		if touch_points.size() == 1:
+			if is_dragging and selected_component:
+				var new_pos = get_global_mouse_position()
+				selected_component.global_position = new_pos
+				_update_all_wires()
+			elif is_panning:
+				camera.position -= event.relative / camera.zoom
+		elif touch_points.size() == 2:
+			_handle_pinch_zoom(event)
+
+func _on_touch_press(screen_pos):
+	var world_pos = get_global_mouse_position()
+	var clicked = get_component_at_position(world_pos)
+	
+	# Запускаем таймер долгого нажатия
+	long_press_active = true
+	long_press_timer = 0.0
+	long_press_component = clicked
+	
+	if is_delete_mode:
+		if clicked:
+			_delete_component(clicked)
+			_show_notification("🗑️ Удалён: " + clicked.name)
+		return
+	
+	if is_wire_mode:
+		if clicked:
+			if not wire_start_component:
+				wire_start_component = clicked
+				_show_notification("📌 Выбран компонент: " + clicked.name)
+			else:
+				if wire_start_component != clicked:
+					_create_wire(wire_start_component, clicked)
+				else:
+					_show_notification("⚠️ Нельзя соединить компонент сам с собой")
+				wire_start_component = null
+				if temp_wire:
+					temp_wire.queue_free()
+					temp_wire = null
+		else:
+			if wire_start_component:
+				wire_start_component = null
+				if temp_wire:
+					temp_wire.queue_free()
+					temp_wire = null
+		return
+	
+	if pending_component_type != null:
+		if not clicked:
+			_create_component(pending_component_type, world_pos)
+			pending_component_type = null
+		return
+	
+	if clicked:
+		if selected_component and selected_component != clicked:
+			if selected_component.has_method("deselect"):
+				selected_component.deselect()
+		selected_component = clicked
+		if selected_component.has_method("select"):
+			selected_component.select()
+		is_dragging = true
+	else:
+		is_panning = true
+		if selected_component:
+			if selected_component.has_method("deselect"):
+				selected_component.deselect()
+			selected_component = null
+
+func _handle_pinch_zoom(event):
+	if touch_points.size() == 2:
+		var points = touch_points.values()
+		var distance = points[0].distance_to(points[1])
+		
+		if last_touch_distance == 0.0:
+			last_touch_distance = distance
+		else:
+			var zoom_delta = (distance - last_touch_distance) * 0.005
+			_zoom(zoom_delta)
+		
+		last_touch_distance = distance
+	else:
+		last_touch_distance = 0.0
 
 func _on_click(screen_pos):
 	var world_pos = get_global_mouse_position()
@@ -814,8 +882,8 @@ func _save_scene():
 		"wires": [],
 		"camera_pos": [camera.position.x, camera.position.y] if camera else [0, 0],
 		"camera_zoom": zoom_level,
-		"music_volume": music_volume,  # <-- ДОБАВЬ
-		"is_music_on": is_music_on,    # <-- ДОБАВЬ
+		"music_volume": music_volume,
+		"is_music_on": is_music_on,
 		"saved_at": Time.get_datetime_string_from_system()
 	}
 	
@@ -879,6 +947,7 @@ func _load_scene():
 		print("❌ Ошибка парсинга!")
 		_show_notification("❌ ОШИБКА ЗАГРУЗКИ")
 		return
+	
 	if save_data.has("music_volume"):
 		music_volume = save_data["music_volume"]
 		if music_player:
@@ -891,7 +960,6 @@ func _load_scene():
 			else:
 				music_player.volume_db = -80
 		
-		# Обновляем интерфейс
 		var music_panel = get_node_or_null("MusicPanel")
 		if music_panel:
 			var toggle_btn = music_panel.get_node_or_null("ToggleButton")
@@ -1057,7 +1125,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		"voltmeter_voltages": []
 	}
 	
-	# Проверяем, что батарейка ещё существует
 	if not is_instance_valid(battery):
 		return result
 	
@@ -1068,7 +1135,6 @@ func _analyze_circuit_correct(battery) -> Dictionary:
 		print("   ❌ Недостаточно проводов!")
 		return result
 	
-	# Проверяем, что оба контакта ещё существуют
 	if not is_instance_valid(connections[0]) or not is_instance_valid(connections[1]):
 		print("   ❌ Один из контактов батарейки не существует!")
 		return result
@@ -1249,7 +1315,6 @@ func _create_music_panel():
 	music_panel.size = Vector2(240, 70)
 	add_child(music_panel)
 	
-	# Стилизация панели
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.05, 0.05, 0.1, 0.9)
 	panel_style.set_border_width_all(1)
@@ -1262,7 +1327,6 @@ func _create_music_panel():
 	hbox.size = Vector2(220, 50)
 	music_panel.add_child(hbox)
 	
-	# Кнопка вкл/выкл
 	var toggle_btn = Button.new()
 	toggle_btn.text = "🔊"
 	toggle_btn.custom_minimum_size = Vector2(45, 45)
@@ -1270,7 +1334,6 @@ func _create_music_panel():
 	toggle_btn.pressed.connect(_toggle_music)
 	hbox.add_child(toggle_btn)
 	
-	# Слайдер громкости
 	var volume_slider = HSlider.new()
 	volume_slider.min_value = -30
 	volume_slider.max_value = 0
@@ -1280,7 +1343,6 @@ func _create_music_panel():
 	volume_slider.value_changed.connect(_set_music_volume)
 	hbox.add_child(volume_slider)
 	
-	# Индикатор громкости
 	var volume_label = Label.new()
 	volume_label.text = str(int(music_volume)) + " dB"
 	volume_label.custom_minimum_size = Vector2(45, 45)
@@ -1288,12 +1350,10 @@ func _create_music_panel():
 	volume_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1, 1))
 	hbox.add_child(volume_label)
 	
-	# Сохраняем ссылки для обновления
 	volume_slider.name = "VolumeSlider"
 	volume_label.name = "VolumeLabel"
 	toggle_btn.name = "ToggleButton"
 	
-	# Обновляем положение при изменении размера окна
 	get_viewport().size_changed.connect(_update_music_panel_position)
 
 func _update_music_panel_position():
@@ -1307,7 +1367,7 @@ func _toggle_music():
 		var toggle_btn = music_panel.get_node_or_null("ToggleButton")
 		if music_player:
 			if is_music_on:
-				music_player.volume_db = -80  # Практически беззвучно
+				music_player.volume_db = -80
 				is_music_on = false
 				if toggle_btn:
 					toggle_btn.text = "🔇"
@@ -1324,7 +1384,6 @@ func _set_music_volume(value: float):
 	if music_player and is_music_on:
 		music_player.volume_db = music_volume
 	
-	# Обновляем надпись
 	var music_panel = get_node_or_null("MusicPanel")
 	if music_panel:
 		var volume_label = music_panel.get_node_or_null("VolumeLabel")
@@ -1340,7 +1399,6 @@ func _find_all_paths_from_to(start, target, avoid) -> Array:
 		var path = queue.pop_front()
 		var current = path[-1]
 		
-		# Проверяем, что текущий компонент существует
 		if not is_instance_valid(current):
 			continue
 		
@@ -1361,7 +1419,6 @@ func _find_all_paths_from_to(start, target, avoid) -> Array:
 				visited_paths.append(path)
 			continue
 		
-		# Проверяем наличие метаданных
 		if current.has_meta("connections"):
 			var conns = current.get_meta("connections")
 			for conn in conns:

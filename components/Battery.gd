@@ -118,27 +118,31 @@ func _input_event(viewport, event, shape_idx):
 				clicked.emit(self)
 			is_long_pressing = false
 			long_press_timer = 0.0
+
 func _open_voltage_menu():
 	if voltage_menu_open:
 		return
 	
 	voltage_menu_open = true
 	
+	# Определяем мобильное устройство
+	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
+	
 	var dialog = Window.new()
 	current_dialog = dialog
 	dialog.title = ""
-	dialog.size = Vector2(420, 480)
+	dialog.size = Vector2(400, 480) if not is_mobile else Vector2(360, 440)
 	dialog.exclusive = true
 	dialog.transient = true
 	dialog.popup_centered()
 	
-	# Убираем возможность изменения размера и делаем окно без рамки
+	# Убираем рамку
 	dialog.unresizable = true
-	dialog.borderless = true  # Убирает рамку и заголовок
+	dialog.borderless = true
 	
-	# Создаём основной контейнер с красивым фоном
+	# Создаём основной фон
 	var main_panel = Panel.new()
-	main_panel.size = Vector2(400, 460)
+	main_panel.size = Vector2(380, 460) if not is_mobile else Vector2(340, 420)
 	main_panel.position = Vector2(10, 10)
 	
 	var panel_style = StyleBoxFlat.new()
@@ -153,7 +157,7 @@ func _open_voltage_menu():
 	
 	# Заголовок
 	var title_panel = Panel.new()
-	title_panel.size = Vector2(400, 50)
+	title_panel.size = Vector2(main_panel.size.x, 50)
 	title_panel.position = Vector2(0, 0)
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = Color(0.15, 0.15, 0.25, 1)
@@ -164,20 +168,19 @@ func _open_voltage_menu():
 	title_panel.add_theme_stylebox_override("panel", title_style)
 	main_panel.add_child(title_panel)
 	
-	# Заголовок - позиционируем по центру
 	var title_label = Label.new()
 	title_label.text = "⚡ НАСТРОЙКА НАПРЯЖЕНИЯ ⚡"
-	title_label.position = Vector2(80, 12)
+	title_label.position = Vector2(70, 12)
 	title_label.size = Vector2(240, 30)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 16)
+	title_label.add_theme_font_size_override("font_size", 14 if is_mobile else 16)
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
 	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
-	close_btn.position = Vector2(365, 10)
+	close_btn.position = Vector2(main_panel.size.x - 35, 10)
 	close_btn.size = Vector2(30, 30)
 	close_btn.add_theme_font_size_override("font_size", 18)
 	close_btn.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
@@ -200,8 +203,8 @@ func _open_voltage_menu():
 	title_panel.add_child(close_btn)
 	
 	var vbox = VBoxContainer.new()
-	vbox.position = Vector2(30, 70)
-	vbox.size = Vector2(340, 360)
+	vbox.position = Vector2(20, 60)
+	vbox.size = Vector2(main_panel.size.x - 40, main_panel.size.y - 70)
 	vbox.add_theme_constant_override("separation", 15)
 	main_panel.add_child(vbox)
 	
@@ -212,14 +215,14 @@ func _open_voltage_menu():
 	
 	var icon_label = Label.new()
 	icon_label.text = "🔋"
-	icon_label.add_theme_font_size_override("font_size", 64)
+	icon_label.add_theme_font_size_override("font_size", 56 if is_mobile else 64)
 	icon_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2, 1))
 	icon_container.add_child(icon_label)
 	
 	# Текущее напряжение
 	var current_frame = Panel.new()
 	current_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	current_frame.custom_minimum_size = Vector2(0, 80)
+	current_frame.custom_minimum_size = Vector2(0, 70)
 	var frame_style = StyleBoxFlat.new()
 	frame_style.bg_color = Color(0.12, 0.12, 0.18, 1)
 	frame_style.set_border_width_all(1)
@@ -230,20 +233,20 @@ func _open_voltage_menu():
 	
 	var current_vbox = VBoxContainer.new()
 	current_vbox.position = Vector2(10, 10)
-	current_vbox.size = Vector2(320, 60)
+	current_vbox.size = Vector2(main_panel.size.x - 60, 50)
 	current_frame.add_child(current_vbox)
 	
 	var current_label = Label.new()
 	current_label.text = "ТЕКУЩЕЕ НАПРЯЖЕНИЕ"
 	current_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	current_label.add_theme_font_size_override("font_size", 12)
+	current_label.add_theme_font_size_override("font_size", 11 if is_mobile else 12)
 	current_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
 	current_vbox.add_child(current_label)
 	
 	var voltage_display = Label.new()
 	voltage_display.text = str(int(voltage)) + " В"
 	voltage_display.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	voltage_display.add_theme_font_size_override("font_size", 42)
+	voltage_display.add_theme_font_size_override("font_size", 36 if is_mobile else 42)
 	voltage_display.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
 	current_vbox.add_child(voltage_display)
 	
@@ -251,7 +254,7 @@ func _open_voltage_menu():
 	var slider_label = Label.new()
 	slider_label.text = "ВЫБЕРИТЕ НАПРЯЖЕНИЕ (1-40 В)"
 	slider_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	slider_label.add_theme_font_size_override("font_size", 12)
+	slider_label.add_theme_font_size_override("font_size", 11 if is_mobile else 12)
 	slider_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
 	vbox.add_child(slider_label)
 	
@@ -261,7 +264,7 @@ func _open_voltage_menu():
 	slider.step = 1.0
 	slider.value = voltage
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.custom_minimum_size = Vector2(0, 30)
+	slider.custom_minimum_size = Vector2(0, 35 if is_mobile else 30)
 	
 	var slider_style = StyleBoxFlat.new()
 	slider_style.bg_color = Color(0.2, 0.2, 0.3, 1)
@@ -278,7 +281,7 @@ func _open_voltage_menu():
 	var slider_value_label = Label.new()
 	slider_value_label.text = str(int(voltage)) + " В"
 	slider_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	slider_value_label.add_theme_font_size_override("font_size", 20)
+	slider_value_label.add_theme_font_size_override("font_size", 18 if is_mobile else 20)
 	slider_value_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1, 1))
 	vbox.add_child(slider_value_label)
 	
@@ -290,13 +293,13 @@ func _open_voltage_menu():
 	# Кнопки
 	var buttons_container = HBoxContainer.new()
 	buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	buttons_container.add_theme_constant_override("separation", 20)
+	buttons_container.add_theme_constant_override("separation", 15)
 	vbox.add_child(buttons_container)
 	
 	var ok_btn = Button.new()
 	ok_btn.text = "ПРИМЕНИТЬ"
-	ok_btn.custom_minimum_size = Vector2(130, 45)
-	ok_btn.add_theme_font_size_override("font_size", 14)
+	ok_btn.custom_minimum_size = Vector2(120, 45 if is_mobile else 45)
+	ok_btn.add_theme_font_size_override("font_size", 13 if is_mobile else 14)
 	
 	var ok_style = StyleBoxFlat.new()
 	ok_style.bg_color = Color(0.2, 0.5, 0.2, 1)
@@ -314,8 +317,8 @@ func _open_voltage_menu():
 	
 	var cancel_btn = Button.new()
 	cancel_btn.text = "ОТМЕНА"
-	cancel_btn.custom_minimum_size = Vector2(130, 45)
-	cancel_btn.add_theme_font_size_override("font_size", 14)
+	cancel_btn.custom_minimum_size = Vector2(120, 45 if is_mobile else 45)
+	cancel_btn.add_theme_font_size_override("font_size", 13 if is_mobile else 14)
 	
 	var cancel_style = StyleBoxFlat.new()
 	cancel_style.bg_color = Color(0.5, 0.2, 0.2, 1)
@@ -376,7 +379,7 @@ func get_voltage() -> float:
 func get_rect() -> Rect2:
 	return Rect2(position - Vector2(40, 30), Vector2(80, 60))
 
-# ============ ДОБАВЬ ЭТИ ФУНКЦИИ СЮДА ============
+# === ФУНКЦИИ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
 func start_long_press():
 	is_long_pressing = true
 	long_press_timer = 0.0
