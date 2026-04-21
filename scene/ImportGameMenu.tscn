@@ -45,19 +45,30 @@ tab_size = 24
 horizontal_alignment = 1
 
 [node name="ButtonToMainScene" type="Button" parent="Control"]
-layout_mode = 0
-offset_left = 1077.0
-offset_top = 5.0
-offset_right = 1140.0
-offset_bottom = 62.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 1027.0
+offset_top = 9.0
+offset_right = 1098.0
+offset_bottom = 68.0
+grow_horizontal = 0
 icon = ExtResource("2_61nwy")
 
 [node name="ButtonImport" type="Button" parent="Control"]
-layout_mode = 0
-offset_left = 1040.0
-offset_top = 553.0
-offset_right = 1131.0
-offset_bottom = 629.0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1009.0
+offset_top = 531.0
+offset_right = 1100.0
+offset_bottom = 607.0
+grow_horizontal = 0
+grow_vertical = 0
 icon = ExtResource("3_xcrdd")
 
 [node name="GamesContainer" type="Control" parent="Control"]

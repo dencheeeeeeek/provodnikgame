@@ -48,7 +48,6 @@ func _ready():
 	print("Шаблон существует: ", FileAccess.file_exists(template_scene_path))
 
 func _setup_mobile_ui():
-	# Увеличиваем кнопки для удобного нажатия пальцем
 	if import_button:
 		import_button.custom_minimum_size = Vector2(200, 60)
 		import_button.add_theme_font_size_override("font_size", 18)
@@ -61,7 +60,6 @@ func _setup_mobile_ui():
 		new_game_button.custom_minimum_size = Vector2(200, 60)
 		new_game_button.add_theme_font_size_override("font_size", 18)
 	
-	# Увеличиваем контейнер для списка игр
 	if games_container:
 		games_container.custom_minimum_size = Vector2(350, 400)
 
@@ -80,23 +78,18 @@ func _on_new_game_pressed():
 func show_name_dialog():
 	var dialog = Window.new()
 	dialog.title = ""
-	
-	# Адаптивный размер под разные устройства
-	var window_width = 450 if not is_touch_mode else 400
-	var window_height = 420 if not is_touch_mode else 380
-	
-	dialog.size = Vector2(window_width, window_height)
+	dialog.size = Vector2(500, 600)
 	dialog.exclusive = true
 	dialog.transient = true
 	dialog.popup_centered()
 	
-	# Убираем стандартную рамку
+	# Убираем рамку
 	dialog.unresizable = true
 	dialog.borderless = true
 	
-	# Создаём основной фон
+	# Основной фон
 	var main_panel = Panel.new()
-	main_panel.size = Vector2(window_width - 20, window_height - 20)
+	main_panel.size = Vector2(480, 580)
 	main_panel.position = Vector2(10, 10)
 	
 	var panel_style = StyleBoxFlat.new()
@@ -111,7 +104,7 @@ func show_name_dialog():
 	
 	# Заголовок
 	var title_panel = Panel.new()
-	title_panel.size = Vector2(main_panel.size.x, 50)
+	title_panel.size = Vector2(480, 55)
 	title_panel.position = Vector2(0, 0)
 	var title_style = StyleBoxFlat.new()
 	title_style.bg_color = Color(0.15, 0.15, 0.25, 1)
@@ -124,183 +117,244 @@ func show_name_dialog():
 	
 	var title_label = Label.new()
 	title_label.text = "✨ СОЗДАНИЕ НОВОЙ ИГРЫ ✨"
-	title_label.position = Vector2(65, 12)
-	title_label.size = Vector2(main_panel.size.x - 130, 30)
+	title_label.anchor_left = 0.5
+	title_label.anchor_right = 0.5
+	title_label.position = Vector2(240, 15)
+	title_label.size = Vector2(300, 30)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 16 if is_touch_mode else 18)
+	title_label.add_theme_font_size_override("font_size", 18)
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
 	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
-	close_btn.position = Vector2(main_panel.size.x - 35, 10)
+	close_btn.anchor_left = 1.0
+	close_btn.position = Vector2(445, 12)
 	close_btn.size = Vector2(30, 30)
-	close_btn.add_theme_font_size_override("font_size", 18)
-	close_btn.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
+	close_btn.add_theme_font_size_override("font_size", 20)
+	close_btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	
-	var close_style = StyleBoxFlat.new()
-	close_style.bg_color = Color(0.5, 0.2, 0.2, 1)
-	close_style.set_corner_radius_all(15)
-	close_btn.add_theme_stylebox_override("normal", close_style)
+	var close_normal_style = StyleBoxFlat.new()
+	close_normal_style.bg_color = Color(0.6, 0.2, 0.2, 1)
+	close_normal_style.set_corner_radius_all(15)
+	close_normal_style.set_border_width_all(1)
+	close_normal_style.border_color = Color(0.9, 0.3, 0.3, 1)
+	close_btn.add_theme_stylebox_override("normal", close_normal_style)
 	
 	var close_hover_style = StyleBoxFlat.new()
-	close_hover_style.bg_color = Color(0.7, 0.3, 0.3, 1)
+	close_hover_style.bg_color = Color(0.8, 0.3, 0.3, 1)
 	close_hover_style.set_corner_radius_all(15)
+	close_hover_style.set_border_width_all(1)
+	close_hover_style.border_color = Color(1, 0.4, 0.4, 1)
 	close_btn.add_theme_stylebox_override("hover", close_hover_style)
+	
+	var close_pressed_style = StyleBoxFlat.new()
+	close_pressed_style.bg_color = Color(0.4, 0.15, 0.15, 1)
+	close_pressed_style.set_corner_radius_all(15)
+	close_btn.add_theme_stylebox_override("pressed", close_pressed_style)
 	
 	close_btn.pressed.connect(func():
 		dialog.queue_free()
 	)
 	title_panel.add_child(close_btn)
 	
+	# ScrollContainer для прокрутки
+	var scroll = ScrollContainer.new()
+	scroll.size = Vector2(480, 520)
+	scroll.position = Vector2(0, 55)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_panel.add_child(scroll)
+	
 	# Основной контейнер
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 30)
-	margin.add_theme_constant_override("margin_right", 30)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_bottom", 20)
-	margin.size = main_panel.size
-	margin.position = Vector2(0, 0)
-	main_panel.add_child(margin)
+	var main_container = VBoxContainer.new()
+	main_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_container.add_theme_constant_override("separation", 20)
+	scroll.add_child(main_container)
 	
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 15)
-	margin.add_child(vbox)
+	# Отступ сверху
+	var top_spacer = Control.new()
+	top_spacer.custom_minimum_size = Vector2(0, 15)
+	main_container.add_child(top_spacer)
 	
-	# Иконка
-	var icon_container = CenterContainer.new()
-	icon_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child(icon_container)
+	# === СЕКЦИЯ РУЧНОГО ВВОДА ===
+	var manual_frame = Panel.new()
+	manual_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	manual_frame.custom_minimum_size = Vector2(0, 160)
+	var frame_style = StyleBoxFlat.new()
+	frame_style.bg_color = Color(0.12, 0.12, 0.18, 1)
+	frame_style.set_border_width_all(1)
+	frame_style.border_color = Color(0.4, 0.6, 0.9, 0.5)
+	frame_style.set_corner_radius_all(12)
+	manual_frame.add_theme_stylebox_override("panel", frame_style)
+	main_container.add_child(manual_frame)
 	
-	var icon_label = Label.new()
-	icon_label.text = "🎮"
-	icon_label.add_theme_font_size_override("font_size", 36 if is_touch_mode else 40)
-	icon_container.add_child(icon_label)
+	var manual_vbox = VBoxContainer.new()
+	manual_vbox.position = Vector2(15, 15)
+	manual_vbox.size = Vector2(430, 130)
+	manual_vbox.add_theme_constant_override("separation", 12)
+	manual_frame.add_child(manual_vbox)
 	
-	# Отступ после иконки
-	var icon_spacer = Control.new()
-	icon_spacer.custom_minimum_size = Vector2(0, 5)
-	vbox.add_child(icon_spacer)
-	
-	# Текст
-	var info_label = Label.new()
-	info_label.text = "Введите название вашей игры:"
-	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_font_size_override("font_size", 14 if is_touch_mode else 15)
-	info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1, 1))
-	vbox.add_child(info_label)
+	var manual_label = Label.new()
+	manual_label.text = "📝 РУЧНОЙ ВВОД"
+	manual_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	manual_label.add_theme_font_size_override("font_size", 14)
+	manual_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
+	manual_vbox.add_child(manual_label)
 	
 	# Поле ввода
 	var line_edit = LineEdit.new()
-	line_edit.placeholder_text = "   Название игры"
+	line_edit.placeholder_text = "Введите название игры..."
 	line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line_edit.custom_minimum_size = Vector2(300, 45 if is_touch_mode else 45)
-	line_edit.add_theme_font_size_override("font_size", 15 if is_touch_mode else 16)
+	line_edit.custom_minimum_size = Vector2(400, 45)
+	line_edit.add_theme_font_size_override("font_size", 16)
+	line_edit.virtual_keyboard_enabled = true
+	line_edit.focus_entered.connect(_force_show_keyboard)
+	manual_vbox.add_child(line_edit)
 	
-	var line_style = StyleBoxFlat.new()
-	line_style.bg_color = Color(0.15, 0.15, 0.2, 1)
-	line_style.set_border_width_all(2)
-	line_style.border_color = Color(0.4, 0.6, 0.9, 1)
-	line_style.set_corner_radius_all(10)
-	line_edit.add_theme_stylebox_override("normal", line_style)
-	line_edit.add_theme_stylebox_override("focus", line_style)
-	
-	if custom_font:
-		line_edit.add_theme_font_override("font", custom_font)
-	
-	vbox.add_child(line_edit)
-	
-	# Кнопки
-	var buttons_container = CenterContainer.new()
-	buttons_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_child(buttons_container)
-	
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 20)
-	buttons_container.add_child(hbox)
-	
+	# Кнопка создания
 	var create_btn = Button.new()
 	create_btn.text = "✅ СОЗДАТЬ"
-	create_btn.custom_minimum_size = Vector2(130 if is_touch_mode else 150, 45)
-	create_btn.add_theme_font_size_override("font_size", 14 if is_touch_mode else 16)
+	create_btn.custom_minimum_size = Vector2(180, 45)
+	create_btn.add_theme_font_size_override("font_size", 15)
 	
-	var create_style = StyleBoxFlat.new()
-	create_style.bg_color = Color(0.2, 0.5, 0.2, 1)
-	create_style.set_border_width_all(1)
-	create_style.border_color = Color(0.3, 0.8, 0.3, 1)
-	create_style.set_corner_radius_all(12)
-	create_btn.add_theme_stylebox_override("normal", create_style)
+	var create_normal_style = StyleBoxFlat.new()
+	create_normal_style.bg_color = Color(0.2, 0.5, 0.2, 1)
+	create_normal_style.set_corner_radius_all(10)
+	create_normal_style.set_border_width_all(1)
+	create_normal_style.border_color = Color(0.3, 0.7, 0.3, 1)
+	create_btn.add_theme_stylebox_override("normal", create_normal_style)
 	
 	var create_hover_style = StyleBoxFlat.new()
 	create_hover_style.bg_color = Color(0.3, 0.6, 0.3, 1)
+	create_hover_style.set_corner_radius_all(10)
 	create_hover_style.set_border_width_all(1)
-	create_hover_style.border_color = Color(0.4, 0.9, 0.4, 1)
-	create_hover_style.set_corner_radius_all(12)
+	create_hover_style.border_color = Color(0.4, 0.8, 0.4, 1)
 	create_btn.add_theme_stylebox_override("hover", create_hover_style)
 	
-	var cancel_btn = Button.new()
-	cancel_btn.text = "❌ ОТМЕНА"
-	cancel_btn.custom_minimum_size = Vector2(130 if is_touch_mode else 150, 45)
-	cancel_btn.add_theme_font_size_override("font_size", 14 if is_touch_mode else 16)
+	var create_btn_center = CenterContainer.new()
+	create_btn_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	create_btn_center.add_child(create_btn)
+	manual_vbox.add_child(create_btn_center)
 	
-	var cancel_style = StyleBoxFlat.new()
-	cancel_style.bg_color = Color(0.5, 0.2, 0.2, 1)
-	cancel_style.set_border_width_all(1)
-	cancel_style.border_color = Color(0.8, 0.3, 0.3, 1)
-	cancel_style.set_corner_radius_all(12)
-	cancel_btn.add_theme_stylebox_override("normal", cancel_style)
+	# Разделитель
+	var separator = HSeparator.new()
+	separator.custom_minimum_size = Vector2(400, 15)
+	separator.add_theme_color_override("color", Color(0.4, 0.6, 0.9, 0.5))
+	var sep_center = CenterContainer.new()
+	sep_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sep_center.add_child(separator)
+	main_container.add_child(sep_center)
 	
-	var cancel_hover_style = StyleBoxFlat.new()
-	cancel_hover_style.bg_color = Color(0.6, 0.3, 0.3, 1)
-	cancel_hover_style.set_border_width_all(1)
-	cancel_hover_style.border_color = Color(0.9, 0.4, 0.4, 1)
-	cancel_hover_style.set_corner_radius_all(12)
-	cancel_btn.add_theme_stylebox_override("hover", cancel_hover_style)
+	# === СЕКЦИЯ ГОТОВЫХ ИМЁН ===
+	var preset_frame = Panel.new()
+	preset_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preset_frame.custom_minimum_size = Vector2(0, 280)
+	frame_style = StyleBoxFlat.new()
+	frame_style.bg_color = Color(0.12, 0.12, 0.18, 1)
+	frame_style.set_border_width_all(1)
+	frame_style.border_color = Color(0.4, 0.6, 0.9, 0.5)
+	frame_style.set_corner_radius_all(12)
+	preset_frame.add_theme_stylebox_override("panel", frame_style)
+	main_container.add_child(preset_frame)
 	
-	hbox.add_child(create_btn)
-	hbox.add_child(cancel_btn)
+	var preset_vbox = VBoxContainer.new()
+	preset_vbox.position = Vector2(15, 15)
+	preset_vbox.size = Vector2(430, 250)
+	preset_vbox.add_theme_constant_override("separation", 10)
+	preset_frame.add_child(preset_vbox)
 	
+	var preset_label = Label.new()
+	preset_label.text = "🎲 ВЫБЕРИТЕ ИЗ СПИСКА"
+	preset_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preset_label.add_theme_font_size_override("font_size", 14)
+	preset_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
+	preset_vbox.add_child(preset_label)
+	
+	# Scroll для списка
+	var preset_scroll = ScrollContainer.new()
+	preset_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preset_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	preset_scroll.custom_minimum_size = Vector2(0, 180)
+	preset_vbox.add_child(preset_scroll)
+	
+	var preset_grid = VBoxContainer.new()
+	preset_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preset_grid.add_theme_constant_override("separation", 8)
+	preset_scroll.add_child(preset_grid)
+	
+	var preset_names = [
+		"🔋 Моя первая цепь",
+		"💡 Схема с лампочкой",
+		"🔌 Параллельное соединение",
+		"📏 Последовательная цепь",
+		"🎛️ Сложная схема",
+		"🏭 Электрическая сеть",
+		"🔬 Лабораторная работа",
+		"📚 Учебный проект",
+		"⭐ Звёздная схема",
+		"🌀 Смешанное соединение"
+	]
+	
+	for name in preset_names:
+		var name_btn = Button.new()
+		name_btn.text = name
+		name_btn.custom_minimum_size = Vector2(400, 40)
+		name_btn.add_theme_font_size_override("font_size", 14)
+		name_btn.add_theme_constant_override("h_separation", 15)
+		
+		var btn_normal_style = StyleBoxFlat.new()
+		btn_normal_style.bg_color = Color(0.12, 0.12, 0.18, 1)
+		btn_normal_style.set_corner_radius_all(8)
+		btn_normal_style.set_border_width_all(1)
+		btn_normal_style.border_color = Color(0.3, 0.5, 0.8, 1)
+		name_btn.add_theme_stylebox_override("normal", btn_normal_style)
+		
+		var btn_hover_style = StyleBoxFlat.new()
+		btn_hover_style.bg_color = Color(0.18, 0.18, 0.25, 1)
+		btn_hover_style.set_corner_radius_all(8)
+		btn_hover_style.set_border_width_all(1)
+		btn_hover_style.border_color = Color(0.5, 0.7, 1, 1)
+		name_btn.add_theme_stylebox_override("hover", btn_hover_style)
+		
+		var btn_center = CenterContainer.new()
+		btn_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_center.add_child(name_btn)
+		preset_grid.add_child(btn_center)
+		
+		name_btn.pressed.connect(_on_preset_name_selected.bind(name, dialog))
+	
+	# Отступ снизу
+	var bottom_spacer = Control.new()
+	bottom_spacer.custom_minimum_size = Vector2(0, 20)
+	main_container.add_child(bottom_spacer)
+	
+	# Подключаем сигнал кнопки создания
 	create_btn.pressed.connect(func():
 		var game_name = line_edit.text.strip_edges()
 		if game_name.is_empty():
-			_show_error_message("Название не может быть пустым!")
+			_show_error_message("Введите название игры или выберите из списка!")
 			return
-		
-		var invalid_chars = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
-		for char in invalid_chars:
-			if game_name.contains(char):
-				_show_error_message("Название содержит недопустимые символы!")
-				return
-		
 		create_new_game(game_name)
-		dialog.queue_free()
-	)
-	
-	cancel_btn.pressed.connect(func():
 		dialog.queue_free()
 	)
 	
 	line_edit.text_submitted.connect(func(text):
 		var game_name = line_edit.text.strip_edges()
 		if game_name.is_empty():
-			_show_error_message("Название не может быть пустым!")
+			_show_error_message("Введите название игры!")
 			return
-		
-		var invalid_chars = ["/", "\\", ":", "*", "?", "\"", "<", ">", "|"]
-		for char in invalid_chars:
-			if game_name.contains(char):
-				_show_error_message("Название содержит недопустимые символы!")
-				return
-		
 		create_new_game(game_name)
 		dialog.queue_free()
 	)
 	
 	add_child(dialog)
 	dialog.popup_centered()
+	
+	# Автофокус на поле ввода
+	await get_tree().process_frame
+	line_edit.grab_focus()
 
 func _on_create_game_confirmed(line_edit: LineEdit):
 	var game_name = line_edit.text.strip_edges()
@@ -525,9 +579,11 @@ func load_games_list():
 		print("❌ GamesContainer не найден!")
 		return
 	
+	# Очищаем контейнер
 	for child in games_container.get_children():
 		child.queue_free()
 	
+	# Загружаем список игр
 	var games = []
 	if FileAccess.file_exists(games_list_path):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
@@ -540,6 +596,7 @@ func load_games_list():
 		_show_empty_message()
 		return
 	
+	# ФИЛЬТРУЕМ: показываем только созданные игры (type == "created")
 	var created_games = []
 	for game in games:
 		if game.get("type") == "created":
@@ -551,7 +608,6 @@ func load_games_list():
 		_show_empty_message()
 		return
 	
-	# Добавляем ScrollContainer для прокрутки на мобильных устройствах
 	var scroll_container = ScrollContainer.new()
 	scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -584,7 +640,7 @@ func _show_empty_message():
 	
 	if custom_font:
 		label.add_theme_font_override("font", custom_font)
-		label.add_theme_font_size_override("font_size", 18 if is_touch_mode else 20)
+		label.add_theme_font_size_override("font_size", 20)
 		label.add_theme_color_override("font_color", Color.GRAY)
 	
 	var center = CenterContainer.new()
@@ -604,31 +660,23 @@ func add_game_item(parent: VBoxContainer, game: Dictionary):
 	
 	if custom_font:
 		game_button.add_theme_font_override("font", custom_font)
-	
-	# Адаптивные размеры для мобильных устройств
-	if is_touch_mode:
-		game_button.add_theme_font_size_override("font_size", 20)
-		game_button.custom_minimum_size = Vector2(280, 60)
-	else:
 		game_button.add_theme_font_size_override("font_size", 24)
-		game_button.custom_minimum_size = Vector2(250, 50)
 	
 	game_button.add_theme_color_override("font_color", Color.WHITE)
 	game_button.add_theme_color_override("font_hover_color", Color.YELLOW)
+	game_button.custom_minimum_size = Vector2(250, 50)
 	game_button.pressed.connect(_on_game_selected.bind(game["file"]))
 	
 	var delete_button = Button.new()
 	delete_button.text = "🗑️"
 	
-	if is_touch_mode:
-		delete_button.add_theme_font_size_override("font_size", 20)
-		delete_button.custom_minimum_size = Vector2(80, 60)
-	else:
+	if custom_font:
+		delete_button.add_theme_font_override("font", custom_font)
 		delete_button.add_theme_font_size_override("font_size", 24)
-		delete_button.custom_minimum_size = Vector2(60, 50)
 	
 	delete_button.add_theme_color_override("font_color", Color.RED)
 	delete_button.add_theme_color_override("font_hover_color", Color.WHITE)
+	delete_button.custom_minimum_size = Vector2(60, 50)
 	delete_button.pressed.connect(_on_delete_game.bind(game["file"], game["name"]))
 	
 	item_container.add_child(game_button)
@@ -718,3 +766,19 @@ func fix_existing_games():
 		print("✅ Список игр обновлён с типами")
 	else:
 		print("Список уже в правильном формате")
+
+# === ФУНКЦИИ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
+func _force_show_keyboard():
+	if OS.has_feature("android") or OS.has_feature("mobile"):
+		DisplayServer.virtual_keyboard_show("", Rect2())
+		print("⌨️ Клавиатура принудительно вызвана")
+
+func _on_preset_name_selected(name: String, dialog: Window):
+	var clean_name = name
+	var emojis = ["🔋 ", "💡 ", "🔌 ", "📏 ", "🎛️ ", "🏭 ", "🔬 ", "📚 ", "⭐ ", "🌀 "]
+	for emoji in emojis:
+		if clean_name.begins_with(emoji):
+			clean_name = clean_name.replace(emoji, "")
+			break
+	create_new_game(clean_name)
+	dialog.queue_free()
