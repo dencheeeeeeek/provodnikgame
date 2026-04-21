@@ -48,34 +48,56 @@ tab_size = 24
 horizontal_alignment = 1
 
 [node name="ButtonNewGame" type="Button" parent="Control"]
-layout_mode = 0
-offset_left = 454.0
-offset_top = 184.0
-offset_right = 667.0
-offset_bottom = 252.0
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 452.0
+offset_top = 189.0
+offset_right = 670.0
+offset_bottom = 257.0
+grow_horizontal = 2
 icon = ExtResource("3_8ajfr")
 
 [node name="ButtonImportGame" type="Button" parent="Control"]
 layout_mode = 1
-offset_left = 452.0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 451.0
 offset_top = 347.0
-offset_right = 670.0
+offset_right = 669.0
 offset_bottom = 415.0
+grow_horizontal = 2
+grow_vertical = 0
 icon = ExtResource("4_j2iek")
 
 [node name="ButtonQuit" type="Button" parent="Control"]
-layout_mode = 0
-offset_left = 450.0
-offset_top = 427.0
-offset_right = 670.0
-offset_bottom = 495.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 452.0
+offset_top = 424.0
+offset_right = 672.0
+offset_bottom = 492.0
+grow_horizontal = 0
 icon = SubResource("CompressedTexture2D_w76ko")
 
 [node name="ButtonLevel" type="Button" parent="Control"]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
 offset_left = 453.0
-offset_top = 265.0
+offset_top = 269.0
 offset_right = 671.0
-offset_bottom = 333.0
+offset_bottom = 337.0
+grow_horizontal = 2
+grow_vertical = 2
 icon = ExtResource("6_w76ko")
 script = ExtResource("7_nx0of")
