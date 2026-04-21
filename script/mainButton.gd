@@ -1,4 +1,4 @@
-extends Node2D
+extends Control
 
 @export var new_game_scene: String = "res://scene/NewGameMenu.tscn"
 @export var import_game_scene: String = "res://scene/ImportGameMenu.tscn"
