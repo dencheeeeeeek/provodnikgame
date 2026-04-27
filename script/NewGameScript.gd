@@ -1,32 +1,26 @@
 extends Node2D
 
-# Ссылки на узлы
 @onready var games_container = $Control/GamesContainer
 @onready var import_button = $Control/ButtonImport
 @onready var back_button = $Control/ButtonToMainScene
 @onready var new_game_button = $Control/ButtonNewGame
 
-# Пути
 var games_list_path = "res://user_games/imported_games.json"
 var games_folder = "res://user_games/"
 var template_scene_path = "res://scene/createScene.tscn"
 
-# Загружаем шрифт
 var custom_font = preload("res://fonts/Jovanny Lemonad - Bender-Bold.otf")
 
-# === ПЕРЕМЕННЫЕ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
 var is_touch_mode = false
 
 func _ready():
 	create_games_folder()
 	
-	# Настройка для мобильных устройств
 	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
 		is_touch_mode = true
 		_setup_mobile_ui()
 		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
 	
-	# ВРЕМЕННО: исправляем старые игры (потом удали эту строку)
 	fix_existing_games()
 	
 	if import_button:
@@ -40,7 +34,6 @@ func _ready():
 	
 	load_games_list()
 	
-	# Диагностика
 	print("=== ДИАГНОСТИКА НОВЫХ ИГР ===")
 	print("Папка игр: ", games_folder)
 	print("Файл списка: ", games_list_path)
@@ -83,11 +76,9 @@ func show_name_dialog():
 	dialog.transient = true
 	dialog.popup_centered()
 	
-	# Убираем рамку
 	dialog.unresizable = true
 	dialog.borderless = true
 	
-	# Основной фон
 	var main_panel = Panel.new()
 	main_panel.size = Vector2(480, 580)
 	main_panel.position = Vector2(10, 10)
@@ -102,7 +93,6 @@ func show_name_dialog():
 	main_panel.add_theme_stylebox_override("panel", panel_style)
 	dialog.add_child(main_panel)
 	
-	# Заголовок
 	var title_panel = Panel.new()
 	title_panel.size = Vector2(480, 55)
 	title_panel.position = Vector2(0, 0)
@@ -126,7 +116,6 @@ func show_name_dialog():
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
-	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
 	close_btn.anchor_left = 1.0
@@ -159,7 +148,6 @@ func show_name_dialog():
 	)
 	title_panel.add_child(close_btn)
 	
-	# ScrollContainer для прокрутки
 	var scroll = ScrollContainer.new()
 	scroll.size = Vector2(480, 520)
 	scroll.position = Vector2(0, 55)
@@ -167,18 +155,15 @@ func show_name_dialog():
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_panel.add_child(scroll)
 	
-	# Основной контейнер
 	var main_container = VBoxContainer.new()
 	main_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_container.add_theme_constant_override("separation", 20)
 	scroll.add_child(main_container)
 	
-	# Отступ сверху
 	var top_spacer = Control.new()
 	top_spacer.custom_minimum_size = Vector2(0, 15)
 	main_container.add_child(top_spacer)
 	
-	# === СЕКЦИЯ РУЧНОГО ВВОДА ===
 	var manual_frame = Panel.new()
 	manual_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	manual_frame.custom_minimum_size = Vector2(0, 160)
@@ -203,7 +188,6 @@ func show_name_dialog():
 	manual_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
 	manual_vbox.add_child(manual_label)
 	
-	# Поле ввода
 	var line_edit = LineEdit.new()
 	line_edit.placeholder_text = "Введите название игры..."
 	line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -213,7 +197,6 @@ func show_name_dialog():
 	line_edit.focus_entered.connect(_force_show_keyboard)
 	manual_vbox.add_child(line_edit)
 	
-	# Кнопка создания
 	var create_btn = Button.new()
 	create_btn.text = "✅ СОЗДАТЬ"
 	create_btn.custom_minimum_size = Vector2(180, 45)
@@ -238,7 +221,6 @@ func show_name_dialog():
 	create_btn_center.add_child(create_btn)
 	manual_vbox.add_child(create_btn_center)
 	
-	# Разделитель
 	var separator = HSeparator.new()
 	separator.custom_minimum_size = Vector2(400, 15)
 	separator.add_theme_color_override("color", Color(0.4, 0.6, 0.9, 0.5))
@@ -247,7 +229,6 @@ func show_name_dialog():
 	sep_center.add_child(separator)
 	main_container.add_child(sep_center)
 	
-	# === СЕКЦИЯ ГОТОВЫХ ИМЁН ===
 	var preset_frame = Panel.new()
 	preset_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preset_frame.custom_minimum_size = Vector2(0, 280)
@@ -272,7 +253,6 @@ func show_name_dialog():
 	preset_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
 	preset_vbox.add_child(preset_label)
 	
-	# Scroll для списка
 	var preset_scroll = ScrollContainer.new()
 	preset_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preset_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -325,12 +305,10 @@ func show_name_dialog():
 		
 		name_btn.pressed.connect(_on_preset_name_selected.bind(name, dialog))
 	
-	# Отступ снизу
 	var bottom_spacer = Control.new()
 	bottom_spacer.custom_minimum_size = Vector2(0, 20)
 	main_container.add_child(bottom_spacer)
 	
-	# Подключаем сигнал кнопки создания
 	create_btn.pressed.connect(func():
 		var game_name = line_edit.text.strip_edges()
 		if game_name.is_empty():
@@ -352,7 +330,6 @@ func show_name_dialog():
 	add_child(dialog)
 	dialog.popup_centered()
 	
-	# Автофокус на поле ввода
 	await get_tree().process_frame
 	line_edit.grab_focus()
 
@@ -579,11 +556,9 @@ func load_games_list():
 		print("❌ GamesContainer не найден!")
 		return
 	
-	# Очищаем контейнер
 	for child in games_container.get_children():
 		child.queue_free()
 	
-	# Загружаем список игр
 	var games = []
 	if FileAccess.file_exists(games_list_path):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
@@ -596,7 +571,6 @@ func load_games_list():
 		_show_empty_message()
 		return
 	
-	# ФИЛЬТРУЕМ: показываем только созданные игры (type == "created")
 	var created_games = []
 	for game in games:
 		if game.get("type") == "created":
@@ -738,7 +712,6 @@ func _on_import_pressed():
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scene/mainscene.tscn")
 
-# ВРЕМЕННАЯ ФУНКЦИЯ ДЛЯ ИСПРАВЛЕНИЯ СТАРЫХ ИГР (ПОТОМ УДАЛИТЬ)
 func fix_existing_games():
 	var games = []
 	if FileAccess.file_exists(games_list_path):
@@ -767,7 +740,6 @@ func fix_existing_games():
 	else:
 		print("Список уже в правильном формате")
 
-# === ФУНКЦИИ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
 func _force_show_keyboard():
 	if OS.has_feature("android") or OS.has_feature("mobile"):
 		DisplayServer.virtual_keyboard_show("", Rect2())

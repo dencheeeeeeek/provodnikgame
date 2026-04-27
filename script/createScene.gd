@@ -1,6 +1,5 @@
 extends Node2D
 
-# === ЗАГРУЗКА КОМПОНЕНТОВ ===
 var battery_scene = preload("res://components/Battery.tscn")
 var bulb_scene = preload("res://components/Bulb.tscn")
 var switch_scene = preload("res://components/Switch.tscn")
@@ -8,11 +7,9 @@ var resistor_scene = preload("res://components/Resistor.tscn")
 var ammeter_scene = preload("res://components/Ammeter.tscn")
 var voltmeter_scene = preload("res://components/Voltmeter.tscn")
 
-# === ЗАГРУЗКА ФОНА ===
 var background_texture = preload("res://chank.png")
 var background_sprites: Array[Sprite2D] = []
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ПЕРЕТАСКИВАНИЯ ПАНЕЛЕЙ ===
 var is_dragging_tools_panel = false
 var is_dragging_info_panel = false
 var drag_panel_offset = Vector2()
@@ -22,7 +19,6 @@ var info_panel: Panel = null
 var components_container: VBoxContainer = null
 var info_label: Label = null
 
-# === ПЕРЕМЕННЫЕ ===
 var camera: Camera2D
 var is_dragging = false
 var is_panning = false
@@ -32,12 +28,10 @@ var wires = []
 var zoom_level = 1.0
 var last_camera_pos: Vector2 = Vector2.ZERO
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ТАЧ-УПРАВЛЕНИЯ ===
 var touch_points = {}
 var last_touch_distance = 0.0
 var is_pinch_zooming = false
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ПРОВОДОВ ===
 var is_wire_mode = false
 var wire_start_component = null
 var temp_wire = null
@@ -45,30 +39,26 @@ var pending_component_type = null
 
 var is_delete_mode = false
 
-# === ЗАГРУЗКА МУЗЫКИ ===
 var music_player: AudioStreamPlayer
-var music_stream = preload("res://audio/background_music.mp3")
+var music_stream_path = "res://audio/background_music.mp3"
+var music_stream: AudioStream = null
 var is_music_on = true
 var music_volume = -10
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ДОЛГОГО НАЖАТИЯ (МОБИЛЬНЫЕ) ===
 var long_press_timer = 0.0
 var long_press_active = false
 var long_press_component = null
 const LONG_PRESS_TIME = 0.8
 
-# === ИНФОРМАЦИЯ О ЦЕПИ ===
 var circuit_voltage = 0.0
 var circuit_current = 0.0
 var circuit_resistance = 0.0
 var circuit_power = 0.0
 var is_circuit_closed = false
 
-# === ПУТЬ ДЛЯ СОХРАНЕНИЯ ===
 var current_game_name = ""
 var save_path = ""
 
-# === СЛОВАРЬ КОМПОНЕНТОВ ===
 var component_types = {
 	"battery": {"scene": battery_scene, "name": "Батарейка", "icon": "🔋"},
 	"bulb": {"scene": bulb_scene, "name": "Лампочка", "icon": "💡"},
@@ -92,13 +82,11 @@ func _ready():
 	
 	get_viewport().size_changed.connect(_update_back_button_position)
 	
-	# Инициализация музыки
 	_music_init()
-	
-	# Настройка для мобильных устройств
-	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios") or OS.has_feature("aurora"):
 		_setup_mobile_ui()
-		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
+		print("📱 Обнаружено мобильное устройство или ОС Аврора! Включена поддержка тач-управления.")
 
 func _setup_mobile_ui():
 	if tools_panel:
@@ -208,7 +196,6 @@ func _process(delta):
 		_update_background()
 		last_camera_pos = camera.global_position
 	
-	# Для тачпада: если кнопка мыши не зажата, но is_panning остался true - сбрасываем
 	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		is_panning = false
 		is_dragging = false
@@ -302,19 +289,48 @@ func _create_info_panel():
 
 func _music_init():
 	music_player = AudioStreamPlayer.new()
-	music_player.stream = music_stream
 	music_player.volume_db = music_volume
 	music_player.bus = "Master"
 	add_child(music_player)
 	
+	_load_music_stream()
+	
 	await get_tree().create_timer(0.5).timeout
-	if music_player:
+	if music_player and is_music_on and music_stream:
+		music_player.stream = music_stream
 		music_player.play()
-		music_player.finished.connect(_music_loop)
 
-func _music_loop():
-	if music_player and is_music_on:
-		music_player.play()
+func _load_music_stream():
+	if ResourceLoader.exists(music_stream_path):
+		music_stream = ResourceLoader.load(music_stream_path, "AudioStream", ResourceLoader.CACHE_MODE_REUSE)
+		if music_stream:
+			print("✅ Музыка загружена: ", music_stream_path)
+			if music_stream is AudioStreamMP3 or music_stream is AudioStreamOggVorbis:
+				music_stream.loop = true
+		else:
+			print("❌ Ошибка загрузки музыки: ", music_stream_path)
+	else:
+		print("❌ Файл не найден: ", music_stream_path)
+		
+		var dir = DirAccess.open("res://audio/")
+		if dir:
+			print("📁 Доступные файлы в audio/:")
+			dir.list_dir_begin()
+			var file_name = dir.get_next()
+			while file_name != "":
+				print("  - ", file_name)
+				file_name = dir.get_next()
+			dir.list_dir_end()
+
+func _notification(what):
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			if music_player and is_music_on:
+				music_player.stream_paused = true
+		
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			if music_player and is_music_on:
+				music_player.stream_paused = false
 
 func _on_tools_panel_drag(event: InputEvent, title_bar: Panel, panel: Panel):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -569,7 +585,6 @@ func _cleanup_invalid_references():
 		wire_start_component = null
 
 func _input(event):
-	# === МЫШЬ И ТАЧПАД ===
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -597,7 +612,6 @@ func _input(event):
 		elif is_panning and camera:
 			camera.position -= event.relative / camera.zoom
 	
-	# === ТАЧ-УПРАВЛЕНИЕ ДЛЯ МОБИЛЬНЫХ ===
 	elif event is InputEventScreenTouch:
 		if event.pressed:
 			_on_touch_press(event.position)
@@ -621,7 +635,6 @@ func _on_touch_press(screen_pos):
 	var world_pos = get_global_mouse_position()
 	var clicked = get_component_at_position(world_pos)
 	
-	# Запускаем таймер долгого нажатия
 	long_press_active = true
 	long_press_timer = 0.0
 	long_press_component = clicked
@@ -866,7 +879,6 @@ func get_component_at_position(pos):
 			return comp
 	return null
 
-# ============ СОХРАНЕНИЕ ============
 func _save_scene():
 	if save_path.is_empty():
 		print("❌ Путь сохранения не установлен!")
@@ -959,15 +971,15 @@ func _load_scene():
 				music_player.volume_db = music_volume
 			else:
 				music_player.volume_db = -80
-		
-		var music_panel = get_node_or_null("MusicPanel")
-		if music_panel:
-			var toggle_btn = music_panel.get_node_or_null("ToggleButton")
-			if toggle_btn:
-				toggle_btn.text = "🔊" if is_music_on else "🔇"
-			var volume_slider = music_panel.get_node_or_null("VolumeSlider")
-			if volume_slider:
-				volume_slider.value = music_volume	
+	
+	var music_panel = get_node_or_null("MusicPanel")
+	if music_panel:
+		var toggle_btn = music_panel.get_node_or_null("ToggleButton")
+		if toggle_btn:
+			toggle_btn.text = "🔊" if is_music_on else "🔇"
+		var volume_slider = music_panel.get_node_or_null("VolumeSlider")
+		if volume_slider:
+			volume_slider.value = music_volume
 	
 	print("Время сохранения: ", save_data.get("saved_at", "неизвестно"))
 	
@@ -1047,8 +1059,6 @@ func _load_scene():
 	_update_background()
 	print("✅ ЗАГРУЗКА ЗАВЕРШЕНА! Компонентов: ", components.size())
 	_show_notification("📂 ИГРА ЗАГРУЖЕНА!")
-
-# ============ ФИЗИКА ЦЕПИ ============
 
 func _update_simulation():
 	_cleanup_invalid_references()
@@ -1504,4 +1514,4 @@ func _zoom_out():
 
 func _to_main_scene():
 	_save_scene()
-	get_tree().change_scene_to_file("res://scene/NewGameMenu.tscn")
+	get_tree().change_scene_to_file("res://scene/mainscene.tscn")

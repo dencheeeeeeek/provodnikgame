@@ -1,11 +1,10 @@
 extends Node2D
 
-# === НАСТРОЙКИ ===
-var music_stream = preload("res://audio/backgroundMaiunMusic.mp3")  # Укажи свой путь к музыке
+var music_stream_path = "res://audio/backgroundMaiunMusic.mp3"
+var music_stream: AudioStream = null
 var is_music_on = true
 var music_volume = -10
 
-# === ПЕРЕМЕННЫЕ ===
 var music_player: AudioStreamPlayer
 var settings_panel: Panel = null
 
@@ -17,19 +16,41 @@ func _ready():
 
 func _music_init():
 	music_player = AudioStreamPlayer.new()
-	music_player.stream = music_stream
 	music_player.volume_db = music_volume
 	add_child(music_player)
 	
 	_load_music_settings()
+	_load_music_stream()
 	
 	await get_tree().create_timer(0.5).timeout
-	if music_player and is_music_on:
+	if music_player and is_music_on and music_stream:
+		music_player.stream = music_stream
 		music_player.play()
 		music_player.finished.connect(_music_loop)
 
+func _load_music_stream():
+	if ResourceLoader.exists(music_stream_path):
+		music_stream = ResourceLoader.load(music_stream_path, "AudioStream", ResourceLoader.CACHE_MODE_REUSE)
+		if music_stream:
+			print("✅ Музыка загружена: ", music_stream_path)
+		else:
+			print("❌ Ошибка загрузки музыки: ", music_stream_path)
+	else:
+		print("❌ Файл не найден: ", music_stream_path)
+		
+		var dir = DirAccess.open("res://audio/")
+		if dir:
+			print("📁 Доступные файлы в audio/:")
+			dir.list_dir_begin()
+			var file_name = dir.get_next()
+			while file_name != "":
+				print("  - ", file_name)
+				file_name = dir.get_next()
+			dir.list_dir_end()
+
 func _music_loop():
-	if music_player and is_music_on:
+	if music_player and is_music_on and music_stream:
+		music_player.stream = music_stream
 		music_player.play()
 
 func _load_music_settings():
@@ -81,7 +102,6 @@ func _update_settings_button_position():
 	if btn:
 		btn.position = Vector2(get_viewport().size.x - 160, get_viewport().size.y - 50)
 
-# === ОКНО НАСТРОЕК ===
 func _create_settings_panel():
 	settings_panel = Panel.new()
 	settings_panel.name = "SettingsPanel"
@@ -90,7 +110,6 @@ func _create_settings_panel():
 	settings_panel.visible = false
 	add_child(settings_panel)
 	
-	# Стилизация панели
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
 	panel_style.set_border_width_all(2)
@@ -100,7 +119,6 @@ func _create_settings_panel():
 	panel_style.shadow_color = Color(0, 0, 0, 0.5)
 	settings_panel.add_theme_stylebox_override("panel", panel_style)
 	
-	# Заголовок
 	var title_panel = Panel.new()
 	title_panel.size = Vector2(350, 45)
 	title_panel.position = Vector2(0, 0)
@@ -122,7 +140,6 @@ func _create_settings_panel():
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
-	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
 	close_btn.position = Vector2(315, 8)
@@ -143,11 +160,10 @@ func _create_settings_panel():
 	close_btn.pressed.connect(_close_settings_panel)
 	title_panel.add_child(close_btn)
 	
-	# Содержимое (с увеличенным отступом сверху)
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 25)
 	margin.add_theme_constant_override("margin_right", 25)
-	margin.add_theme_constant_override("margin_top", 30)  # Увеличенный отступ от заголовка
+	margin.add_theme_constant_override("margin_top", 30)
 	margin.add_theme_constant_override("margin_bottom", 20)
 	margin.size = Vector2(350, 260)
 	margin.position = Vector2(0, 45)
@@ -159,7 +175,6 @@ func _create_settings_panel():
 	vbox.add_theme_constant_override("separation", 20)
 	margin.add_child(vbox)
 	
-	# Кнопка вкл/выкл музыки
 	var toggle_container = HBoxContainer.new()
 	toggle_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	toggle_container.add_theme_constant_override("separation", 20)
@@ -178,7 +193,6 @@ func _create_settings_panel():
 	toggle_btn.pressed.connect(_toggle_music)
 	toggle_container.add_child(toggle_btn)
 	
-	# Слайдер громкости
 	var volume_container = VBoxContainer.new()
 	volume_container.add_theme_constant_override("separation", 10)
 	vbox.add_child(volume_container)
@@ -206,7 +220,6 @@ func _create_settings_panel():
 	volume_value_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1))
 	volume_container.add_child(volume_value_label)
 	
-	# Сохраняем ссылки
 	settings_panel.set_meta("toggle_btn", toggle_btn)
 	settings_panel.set_meta("volume_slider", volume_slider)
 	settings_panel.set_meta("volume_label", volume_value_label)

@@ -34,6 +34,5 @@ func _input(event: InputEvent):
 		
 		
 		if gameworld:
-			# Отправляем сигнал, дальше DropZone сам определит коллизию
 			emit_signal("item_dropped", world_position, item_data)
 			queue_free()

@@ -1,25 +1,21 @@
 extends Node2D
 
-# Ссылки на узлы
-@onready var games_container = $Control/GamesContainer
 @onready var import_button = $Control/ButtonImport
 @onready var back_button = $Control/ButtonToMainScene
 
-var games_list_path = "res://user_games/imported_games.json"
-var games_folder = "res://user_games/"
+var games_list_path = "user://imported_games.json"
+var games_folder = "user://games/"
+var games_container: Control
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ТАЧ-УПРАВЛЕНИЯ ===
-var touch_points = {}
 var is_touch_mode = false
 
 func _ready():
+	_create_games_container()
 	create_games_folder()
 	
-	# Настройка для мобильных устройств
-	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios") or OS.has_feature("aurora"):
 		is_touch_mode = true
 		_setup_mobile_ui()
-		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
 	
 	if import_button:
 		import_button.pressed.connect(_on_import_pressed)
@@ -28,35 +24,42 @@ func _ready():
 		back_button.pressed.connect(_on_back_pressed)
 	
 	load_games_list()
-	
-	# Диагностика
 	diagnose_folder()
 
+func _create_games_container():
+	var control = get_node_or_null("Control")
+	if control:
+		games_container = Control.new()
+		games_container.name = "GamesContainerCode"
+		games_container.position = Vector2(50, 170)
+		games_container.size = Vector2(get_viewport().size.x - 100, get_viewport().size.y - 250)
+		control.add_child(games_container)
+		
+		get_viewport().size_changed.connect(_on_resize)
+
+func _on_resize():
+	if games_container:
+		games_container.position = Vector2(50, 170)
+		games_container.size = Vector2(get_viewport().size.x - 100, get_viewport().size.y - 250)
+
 func _setup_mobile_ui():
-	# Увеличиваем кнопки для удобного нажатия пальцем
 	if import_button:
 		import_button.custom_minimum_size = Vector2(200, 60)
 		import_button.add_theme_font_size_override("font_size", 18)
-	
 	if back_button:
 		back_button.custom_minimum_size = Vector2(200, 60)
 		back_button.add_theme_font_size_override("font_size", 18)
-	
-	# Увеличиваем размер контейнера для списка
-	if games_container:
-		games_container.custom_minimum_size = Vector2(350, 400)
 
 func diagnose_folder():
 	print("=== ДИАГНОСТИКА ===")
 	print("Путь к папке игр: ", games_folder)
 	print("Путь к JSON: ", games_list_path)
 	
-	var dir = DirAccess.open("res://")
+	var dir = DirAccess.open("user://")
 	if dir:
-		if dir.dir_exists("user_games"):
-			print("Папка user_games существует")
-			
-			dir.open("res://user_games")
+		if dir.dir_exists("games"):
+			print("Папка games существует")
+			dir.open("user://games")
 			dir.list_dir_begin()
 			var file_name = dir.get_next()
 			while file_name != "":
@@ -64,38 +67,29 @@ func diagnose_folder():
 				file_name = dir.get_next()
 			dir.list_dir_end()
 		else:
-			print("Папка user_games НЕ существует")
+			print("Папка games НЕ существует")
 	
 	if FileAccess.file_exists(games_list_path):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
 		var content = file.get_as_text()
 		file.close()
 		print("Содержимое JSON: ", content)
-		
-		var parsed = JSON.parse_string(content)
-		print("Распарсенный JSON: ", parsed)
 	else:
 		print("JSON файл не существует")
 	print("=== КОНЕЦ ДИАГНОСТИКИ ===")
 
 func create_games_folder():
-	var dir = DirAccess.open("res://")
-	if dir and not dir.dir_exists("user_games"):
-		dir.make_dir("user_games")
-		print("Папка user_games создана в res://")
+	var dir = DirAccess.open("user://")
+	if dir and not dir.dir_exists("games"):
+		dir.make_dir("games")
+		print("Папка games создана в user://")
 
 func _on_import_pressed():
 	var file_dialog = FileDialog.new()
 	file_dialog.title = "Выберите сцену игры (.tscn)"
 	file_dialog.add_filter("*.tscn", "Godot Scene")
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	
-	# Для мобильных устройств увеличиваем размер диалога
-	if is_touch_mode:
-		file_dialog.size = Vector2(400, 500)
-	
 	file_dialog.current_dir = "res://"
-	
 	file_dialog.file_selected.connect(_on_file_selected)
 	add_child(file_dialog)
 	file_dialog.popup_centered()
@@ -107,8 +101,7 @@ func _on_file_selected(path: String):
 	var dest_path = games_folder + file_name
 	
 	if FileAccess.file_exists(dest_path):
-		print("Файл уже существует в папке: ", dest_path)
-		show_error("Игра с таким именем уже существует в папке!")
+		show_error("Игра с таким именем уже существует!")
 		return
 	
 	var file = FileAccess.open(path, FileAccess.READ)
@@ -121,15 +114,12 @@ func _on_file_selected(path: String):
 			dest_file.store_buffer(data)
 			dest_file.close()
 			print("Файл скопирован: ", dest_path)
-			
 			save_game_to_list(file_name)
 			load_games_list()
-			show_success("Игра успешно импортирована!")
+			show_success("Игра импортирована!")
 		else:
-			print("Ошибка сохранения файла")
 			show_error("Не удалось сохранить файл")
 	else:
-		print("Ошибка открытия файла")
 		show_error("Не удалось открыть файл")
 
 func save_game_to_list(file_name: String):
@@ -139,15 +129,10 @@ func save_game_to_list(file_name: String):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
 		var content = file.get_as_text()
 		file.close()
-		
-		if content and not content.is_empty():
+		if content != "" and content != "[]":
 			var parsed = JSON.parse_string(content)
 			if parsed != null:
 				games = parsed
-			else:
-				games = []
-		else:
-			games = []
 	
 	var game_name = file_name.replace(".tscn", "")
 	
@@ -155,28 +140,23 @@ func save_game_to_list(file_name: String):
 	for game in games:
 		if game.get("file") == file_name:
 			exists = true
-			print("Игра уже есть в списке: ", game)
 			break
 	
 	if not exists:
 		games.append({
 			"name": game_name,
 			"file": file_name,
-			"type": "imported",
-			"imported_at": Time.get_datetime_string_from_system()
+			"type": "imported"
 		})
 		
 		var save = FileAccess.open(games_list_path, FileAccess.WRITE)
-		var json_string = JSON.stringify(games, "\t")
-		save.store_string(json_string)
+		save.store_string(JSON.stringify(games, "\t"))
 		save.close()
-		print("✅ Импортированная игра добавлена в список: ", game_name)
-	else:
-		print("⚠️ Игра уже существует в списке, пропускаем добавление")
+		print("✅ Игра добавлена в список, теперь игр: ", games.size())
 
 func load_games_list():
 	if not games_container:
-		print("Ошибка: GamesContainer не найден")
+		print("GamesContainer не найден!")
 		return
 	
 	for child in games_container.get_children():
@@ -187,50 +167,63 @@ func load_games_list():
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
 		var content = file.get_as_text()
 		file.close()
-		
-		if content and not content.is_empty():
+		if content != "" and content != "[]":
 			var parsed = JSON.parse_string(content)
 			if parsed != null and typeof(parsed) == TYPE_ARRAY:
 				games = parsed
-			else:
-				games = []
-		else:
-			games = []
 	
-	# ФИЛЬТРУЕМ: показываем только импортированные игры (type == "imported")
 	var imported_games = []
 	for game in games:
 		if game.get("type") == "imported":
 			imported_games.append(game)
 	
-	print("📦 Показываем только импортированные игры: ", imported_games.size())
+	print("Найдено импортированных игр: ", imported_games.size())
 	
 	if imported_games.is_empty():
 		show_empty_message()
 		return
 	
-	# Добавляем ScrollContainer для прокрутки на мобильных устройствах
-	var scroll_container = ScrollContainer.new()
-	scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var panel = Panel.new()
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	
-	var vertical_container = VBoxContainer.new()
-	vertical_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vertical_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vertical_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
+	panel_style.set_border_width_all(2)
+	panel_style.border_color = Color(0.4, 0.6, 0.9, 1)
+	panel_style.set_corner_radius_all(15)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	
+	var margin = MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	panel.add_child(margin)
+	
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 10)
 	
 	for game in imported_games:
-		add_game_item(vertical_container, game)
+		add_game_item(vbox, game)
 	
-	scroll_container.add_child(vertical_container)
-	games_container.add_child(scroll_container)
+	scroll.add_child(vbox)
+	margin.add_child(scroll)
+	games_container.add_child(panel)
+	print("Список отображён, элементов: ", imported_games.size())
 
 func show_empty_message():
 	var label = Label.new()
 	label.text = "Нет импортированных игр\nНажмите 'Импорт' чтобы добавить"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 20 if not is_touch_mode else 18)
+	label.add_theme_font_size_override("font_size", 20)
 	label.add_theme_color_override("font_color", Color.GRAY)
 	
 	var center = CenterContainer.new()
@@ -241,60 +234,37 @@ func show_empty_message():
 	games_container.add_child(center)
 
 func add_game_item(parent: VBoxContainer, game: Dictionary):
-	var item_container = HBoxContainer.new()
-	item_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	item_container.add_theme_constant_override("separation", 15)
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 15)
 	
-	var game_button = Button.new()
-	game_button.text = game["name"]
+	var game_btn = Button.new()
+	game_btn.text = game["name"]
+	game_btn.add_theme_font_size_override("font_size", 24)
+	game_btn.add_theme_color_override("font_color", Color.WHITE)
+	game_btn.add_theme_color_override("font_hover_color", Color.YELLOW)
+	game_btn.custom_minimum_size = Vector2(250, 50)
+	game_btn.pressed.connect(_on_game_selected.bind(game["file"]))
 	
-	# Адаптивные размеры для мобильных устройств
-	if is_touch_mode:
-		game_button.add_theme_font_size_override("font_size", 20)
-		game_button.custom_minimum_size = Vector2(280, 60)
-	else:
-		game_button.add_theme_font_size_override("font_size", 24)
-		game_button.custom_minimum_size = Vector2(250, 50)
+	var del_btn = Button.new()
+	del_btn.text = "🗑️"
+	del_btn.add_theme_font_size_override("font_size", 24)
+	del_btn.add_theme_color_override("font_color", Color.RED)
+	del_btn.custom_minimum_size = Vector2(60, 50)
+	del_btn.pressed.connect(_on_delete_game.bind(game["file"], game["name"]))
 	
-	game_button.add_theme_color_override("font_color", Color.WHITE)
-	game_button.add_theme_color_override("font_hover_color", Color.YELLOW)
-	game_button.pressed.connect(_on_game_selected.bind(game["file"]))
-	
-	var delete_button = Button.new()
-	delete_button.text = "🗑️"
-	
-	if is_touch_mode:
-		delete_button.add_theme_font_size_override("font_size", 20)
-		delete_button.custom_minimum_size = Vector2(80, 60)
-	else:
-		delete_button.add_theme_font_size_override("font_size", 24)
-		delete_button.custom_minimum_size = Vector2(60, 50)
-	
-	delete_button.add_theme_color_override("font_color", Color.RED)
-	delete_button.add_theme_color_override("font_hover_color", Color.WHITE)
-	delete_button.pressed.connect(_on_delete_game.bind(game["file"], game["name"]))
-	
-	item_container.add_child(game_button)
-	item_container.add_child(delete_button)
-	parent.add_child(item_container)
-	
-	var separator = HSeparator.new()
-	separator.custom_minimum_size = Vector2(350, 2)
-	parent.add_child(separator)
+	hbox.add_child(game_btn)
+	hbox.add_child(del_btn)
+	parent.add_child(hbox)
 
 func _on_game_selected(game_file: String):
-	print("Запуск игры: ", game_file)
 	var scene_path = games_folder + game_file
-	
 	if FileAccess.file_exists(scene_path):
 		var scene = load(scene_path)
 		if scene:
 			get_tree().change_scene_to_packed(scene)
 		else:
-			print("Ошибка загрузки сцены")
 			show_error("Не удалось загрузить игру")
 	else:
-		print("Файл не найден: ", scene_path)
 		show_error("Файл игры не найден")
 
 func _on_delete_game(game_file: String, game_name: String):
@@ -303,29 +273,25 @@ func _on_delete_game(game_file: String, game_name: String):
 		var dir = DirAccess.open(games_folder)
 		if dir:
 			dir.remove(game_file)
-			print("Удален файл: ", scene_path)
 	
 	var games = []
 	if FileAccess.file_exists(games_list_path):
 		var file = FileAccess.open(games_list_path, FileAccess.READ)
 		var content = file.get_as_text()
 		file.close()
-		
-		if content and not content.is_empty():
+		if content != "" and content != "[]":
 			var parsed = JSON.parse_string(content)
 			if parsed != null:
 				games = parsed
 	
-	if games:
-		for i in range(games.size() - 1, -1, -1):
-			if games[i].get("file") == game_file:
-				games.remove_at(i)
-				break
-		
-		var save = FileAccess.open(games_list_path, FileAccess.WRITE)
-		save.store_string(JSON.stringify(games, "\t"))
-		save.close()
-		print("Игра удалена из списка")
+	for i in range(games.size() - 1, -1, -1):
+		if games[i].get("file") == game_file:
+			games.remove_at(i)
+			break
+	
+	var save = FileAccess.open(games_list_path, FileAccess.WRITE)
+	save.store_string(JSON.stringify(games, "\t"))
+	save.close()
 	
 	load_games_list()
 
@@ -333,11 +299,10 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scene/mainscene.tscn")
 
 func show_error(message: String):
-	print("Ошибка: ", message)
 	var label = Label.new()
 	label.text = message
 	label.add_theme_color_override("font_color", Color.RED)
-	label.add_theme_font_size_override("font_size", 16 if not is_touch_mode else 18)
+	label.add_theme_font_size_override("font_size", 16)
 	label.position = Vector2(get_viewport().size.x / 2 - 150, get_viewport().size.y - 100)
 	label.size = Vector2(300, 50)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -352,11 +317,10 @@ func show_error(message: String):
 	label.queue_free()
 
 func show_success(message: String):
-	print("Успех: ", message)
 	var label = Label.new()
 	label.text = message
 	label.add_theme_color_override("font_color", Color.GREEN)
-	label.add_theme_font_size_override("font_size", 16 if not is_touch_mode else 18)
+	label.add_theme_font_size_override("font_size", 16)
 	label.position = Vector2(get_viewport().size.x / 2 - 150, get_viewport().size.y - 100)
 	label.size = Vector2(300, 50)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

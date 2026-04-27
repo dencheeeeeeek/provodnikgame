@@ -99,7 +99,6 @@ func deselect():
 
 func update_state(current: float):
 	current_value = current
-	# Исправлено: округление до 3 знаков для большей точности
 	var rounded = round(current_value * 1000) / 1000
 	value_label.text = str(rounded) + " A"
 	print("🔧 Амперметр ", name, " обновлён: current=", current_value, " -> отображаем=", rounded)

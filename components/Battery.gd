@@ -99,16 +99,12 @@ func _process(delta):
 			_open_voltage_menu()
 
 func _input_event(viewport, event, shape_idx):
-	# Левый клик/касание - выделение
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		clicked.emit(self)
-	
-	# Правый клик мыши - меню напряжения
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_open_voltage_menu()
 		get_viewport().set_input_as_handled()
 	
-	# Тач для мобильных устройств
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			is_long_pressing = true
@@ -125,7 +121,6 @@ func _open_voltage_menu():
 	
 	voltage_menu_open = true
 	
-	# Определяем мобильное устройство
 	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
 	
 	var dialog = Window.new()
@@ -136,11 +131,9 @@ func _open_voltage_menu():
 	dialog.transient = true
 	dialog.popup_centered()
 	
-	# Убираем рамку
 	dialog.unresizable = true
 	dialog.borderless = true
-	
-	# Создаём основной фон
+
 	var main_panel = Panel.new()
 	main_panel.size = Vector2(380, 460) if not is_mobile else Vector2(340, 420)
 	main_panel.position = Vector2(10, 10)
@@ -155,7 +148,6 @@ func _open_voltage_menu():
 	main_panel.add_theme_stylebox_override("panel", panel_style)
 	dialog.add_child(main_panel)
 	
-	# Заголовок
 	var title_panel = Panel.new()
 	title_panel.size = Vector2(main_panel.size.x, 50)
 	title_panel.position = Vector2(0, 0)
@@ -177,7 +169,6 @@ func _open_voltage_menu():
 	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
 	title_panel.add_child(title_label)
 	
-	# Кнопка закрытия
 	var close_btn = Button.new()
 	close_btn.text = "✕"
 	close_btn.position = Vector2(main_panel.size.x - 35, 10)
@@ -207,8 +198,7 @@ func _open_voltage_menu():
 	vbox.size = Vector2(main_panel.size.x - 40, main_panel.size.y - 70)
 	vbox.add_theme_constant_override("separation", 15)
 	main_panel.add_child(vbox)
-	
-	# Иконка батарейки
+
 	var icon_container = CenterContainer.new()
 	icon_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(icon_container)
@@ -219,7 +209,6 @@ func _open_voltage_menu():
 	icon_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2, 1))
 	icon_container.add_child(icon_label)
 	
-	# Текущее напряжение
 	var current_frame = Panel.new()
 	current_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	current_frame.custom_minimum_size = Vector2(0, 70)
@@ -250,7 +239,6 @@ func _open_voltage_menu():
 	voltage_display.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
 	current_vbox.add_child(voltage_display)
 	
-	# Слайдер
 	var slider_label = Label.new()
 	slider_label.text = "ВЫБЕРИТЕ НАПРЯЖЕНИЕ (1-40 В)"
 	slider_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -290,7 +278,6 @@ func _open_voltage_menu():
 		voltage_display.text = str(int(value)) + " В"
 	)
 	
-	# Кнопки
 	var buttons_container = HBoxContainer.new()
 	buttons_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons_container.add_theme_constant_override("separation", 15)
@@ -379,7 +366,6 @@ func get_voltage() -> float:
 func get_rect() -> Rect2:
 	return Rect2(position - Vector2(40, 30), Vector2(80, 60))
 
-# === ФУНКЦИИ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===
 func start_long_press():
 	is_long_pressing = true
 	long_press_timer = 0.0

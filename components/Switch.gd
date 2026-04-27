@@ -111,8 +111,7 @@ func toggle():
 	_draw_switch()
 	toggled.emit(is_on)
 	set_meta("is_on", is_on)
-	
-	# Исправлено: проверяем, что get_tree() не null
+
 	var tree = get_tree()
 	if tree:
 		var main_scene = tree.current_scene
@@ -120,7 +119,6 @@ func toggle():
 			main_scene.update_simulation()
 			print("🔄 Выключатель ", name, " переключен в положение: ", "ON" if is_on else "OFF")
 		else:
-			# Пробуем найти через группу
 			var nodes = tree.get_nodes_in_group("circuit")
 			for node in nodes:
 				if node.has_method("update_simulation"):

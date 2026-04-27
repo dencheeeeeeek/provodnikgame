@@ -1,11 +1,10 @@
 extends Camera2D
 
-# Настройки
+
 @export var drag_speed := 1.0
 @export var inertia := 0.95
 @export var min_inertia_velocity := 5.0
 
-# Внутренние переменные
 var dragging := false
 var drag_start_position := Vector2.ZERO
 var camera_start_position := Vector2.ZERO
@@ -17,11 +16,9 @@ func _ready():
 		drag_speed = 1.5
 
 func _input(event):
-	# Проверяем, не над UI ли курсор
 	if _is_mouse_over_ui():
 		return
 	
-	# Обработка мыши
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -29,14 +26,12 @@ func _input(event):
 			else:
 				_stop_drag(event.position)
 	
-	# Обработка касания
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_start_drag(event.position)
 		else:
 			_stop_drag(event.position)
 	
-	# Обработка движения
 	if (event is InputEventMouseMotion or event is InputEventScreenDrag) and dragging:
 		_update_drag(event.position)
 

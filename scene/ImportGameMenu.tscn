@@ -15,6 +15,14 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
+[node name="GamesContainer" type="Control" parent="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 277.0
+offset_top = 188.0
+offset_right = 837.0
+offset_bottom = 360.0
+
 [node name="Background" type="TextureRect" parent="Control"]
 layout_mode = 1
 anchors_preset = 15
@@ -70,11 +78,3 @@ offset_bottom = 607.0
 grow_horizontal = 0
 grow_vertical = 0
 icon = ExtResource("3_xcrdd")
-
-[node name="GamesContainer" type="Control" parent="Control"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 277.0
-offset_top = 188.0
-offset_right = 837.0
-offset_bottom = 360.0

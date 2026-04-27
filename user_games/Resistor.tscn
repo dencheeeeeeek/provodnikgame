@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3flixwjihjvf"]
+
+[ext_resource type="Script" uid="uid://dvkp1p2vj6a03" path="res://components/Resistor.gd" id="1_2umw0"]
+
+[node name="Resistor" type="Area2D"]
+script = ExtResource("1_2umw0")

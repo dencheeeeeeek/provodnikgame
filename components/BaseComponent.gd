@@ -1,6 +1,5 @@
 extends Node2D
 
-# === Узлы ===
 @onready var camera = $Camera2D if has_node("Camera2D") else null
 @onready var tools_panel = $ToolsPanel if has_node("ToolsPanel") else null
 @onready var components_container = $ToolsPanel/ComponentsContainer if has_node("ToolsPanel/ComponentsContainer") else null
@@ -9,13 +8,11 @@ extends Node2D
 @onready var zoom_out_button = $ToolsPanel/ZoomOut if has_node("ToolsPanel/ZoomOut") else null
 @onready var reset_view_button = $ToolsPanel/ResetView if has_node("ToolsPanel/ResetView") else null
 
-# === Загрузка компонентов ===
 var battery_scene = preload("res://components/Battery.tscn")
 var bulb_scene = preload("res://components/Bulb.tscn")
 var switch_scene = preload("res://components/Switch.tscn")
 var resistor_scene = preload("res://components/Resistor.tscn")
 
-# === Переменные ===
 var current_tool = null
 var is_dragging = false
 var is_panning = false
@@ -28,12 +25,10 @@ var zoom_level = 1.0
 var min_zoom = 0.5
 var max_zoom = 2.0
 
-# === Переменные для проводов ===
 var wire_mode_active = false
 var first_wire_component = null
 var temp_wire = null
 
-# === Словарь типов компонентов ===
 var component_types = {
 	"battery": {"scene": battery_scene, "name": "Батарейка", "icon": "🔋"},
 	"bulb": {"scene": bulb_scene, "name": "Лампочка", "icon": "💡"},
@@ -117,7 +112,6 @@ func create_tool_buttons():
 	for child in components_container.get_children():
 		child.queue_free()
 	
-	# Кнопка режима проводов
 	var wire_button = Button.new()
 	wire_button.text = "🔌 Режим проводов"
 	wire_button.custom_minimum_size = Vector2(140, 50)
@@ -164,7 +158,6 @@ func _remove_temp_wire():
 		temp_wire = null
 
 func _input(event):
-	# Обработка мыши для временного провода
 	if wire_mode_active and first_wire_component and event is InputEventMouseMotion:
 		_update_temp_wire()
 	
@@ -209,31 +202,24 @@ func _on_press(screen_position):
 	var mouse_pos = get_global_mouse_position()
 	var clicked_component = get_component_at_position(mouse_pos)
 	
-	# === РЕЖИМ ПРОВОДОВ ===
 	if wire_mode_active:
 		if clicked_component:
 			if not first_wire_component:
-				# Первый клик - выбираем начальный компонент
 				first_wire_component = clicked_component
 				if first_wire_component.has_method("set_selected_for_wire"):
 					first_wire_component.set_selected_for_wire(true)
 				print("📌 Выбран первый компонент для провода")
 			else:
-				# Второй клик - создаём провод
 				if first_wire_component != clicked_component:
 					create_wire(first_wire_component, clicked_component)
 				else:
 					print("⚠️ Нельзя соединить компонент сам с собой")
-				# Выходим из режима проводов
 				_deactivate_wire_mode()
 		else:
-			# Клик на пустое место - отмена
 			_deactivate_wire_mode()
 		return
 	
-	# === РЕЖИМ ПЕРЕМЕЩЕНИЯ И СОЗДАНИЯ ===
 	if clicked_component:
-		# Выделяем компонент для перемещения
 		if selected_component and selected_component != clicked_component:
 			if selected_component.has_method("deselect"):
 				selected_component.deselect()
@@ -246,11 +232,9 @@ func _on_press(screen_position):
 		drag_start = mouse_pos
 		current_tool = null
 	elif current_tool:
-		# Создаём новый компонент
 		create_component(current_tool, mouse_pos)
 		current_tool = null
 	else:
-		# Перемещение камеры
 		is_panning = true
 		if camera:
 			camera_drag_start = camera.position
@@ -288,7 +272,6 @@ func create_component(component_type, position):
 	print("✅ Создан компонент: ", component_type)
 
 func _on_component_clicked(component):
-	# Если в режиме проводов - не обрабатываем обычный клик
 	if wire_mode_active:
 		return
 	
@@ -303,7 +286,6 @@ func _on_component_clicked(component):
 	current_tool = null
 
 func create_wire(comp1, comp2):
-	# Проверка на существование провода
 	for wire in wires:
 		if (wire.from == comp1 and wire.to == comp2) or (wire.from == comp2 and wire.to == comp1):
 			print("⚠️ Провод уже существует между этими компонентами")
@@ -315,7 +297,6 @@ func create_wire(comp1, comp2):
 		"line": null
 	}
 	
-	# Создаём линию
 	var line = Line2D.new()
 	line.width = 4
 	line.default_color = Color(1, 0.8, 0.2, 1)
@@ -329,7 +310,6 @@ func create_wire(comp1, comp2):
 	wire.line = line
 	wires.append(wire)
 	
-	# Сохраняем связи в компонентах
 	if not comp1.has_meta("connected_to"):
 		comp1.set_meta("connected_to", [])
 	if not comp2.has_meta("connected_to"):
@@ -362,13 +342,10 @@ func get_component_at_position(pos):
 				return component
 	return null
 
-# === ФИЗИКА ЭЛЕКТРИЧЕСТВА ===
 func update_simulation():
-	# Сначала сбрасываем ток у всех компонентов
 	for component in components:
 		component.set_meta("current", 0.0)
 	
-	# Находим все замкнутые цепи
 	var circuits = find_closed_circuits()
 	
 	if circuits.is_empty():
@@ -378,7 +355,6 @@ func update_simulation():
 				component.update_state(0.0)
 		return
 	
-	# Для каждой замкнутой цепи рассчитываем ток
 	for circuit in circuits:
 		calculate_circuit_parameters(circuit)
 	
@@ -390,10 +366,9 @@ func find_closed_circuits() -> Array:
 	
 	for component in components:
 		if component not in visited_components:
-			# Ищем цепь через поиск в глубину
 			var circuit = []
 			var stack = [component]
-			var component_to_parent = {}  # Для отслеживания пути
+			var component_to_parent = {}
 			
 			while stack:
 				var current = stack.pop_back()
@@ -409,9 +384,7 @@ func find_closed_circuits() -> Array:
 							stack.append(connected)
 							component_to_parent[connected] = current
 			
-			# Проверяем, замкнута ли цепь
 			if circuit.size() >= 2:
-				# Ищем циклы в цепи
 				var has_cycle = check_for_cycle(circuit, component_to_parent)
 				if has_cycle:
 					circuits.append(circuit)
@@ -419,11 +392,9 @@ func find_closed_circuits() -> Array:
 	return circuits
 
 func check_for_cycle(circuit: Array, parent_map: Dictionary) -> bool:
-	# Простая проверка: если в цепи больше 1 компонента и есть соединения
 	if circuit.size() < 2:
 		return false
 	
-	# Проверяем, есть ли у первого и последнего компонента связь
 	var first = circuit[0]
 	var last = circuit[circuit.size() - 1]
 	
@@ -431,7 +402,6 @@ func check_for_cycle(circuit: Array, parent_map: Dictionary) -> bool:
 		if last in first.get_meta("connected_to") or first in last.get_meta("connected_to"):
 			return true
 	
-	# Дополнительная проверка на циклы
 	var visited = []
 	var stack = [circuit[0]]
 	
@@ -454,32 +424,27 @@ func calculate_circuit_parameters(circuit: Array):
 	var total_voltage = 0.0
 	var total_resistance = 0.0
 	
-	# Суммируем все напряжения и сопротивления
 	for component in circuit:
 		if component.has_method("get_voltage"):
 			total_voltage += component.get_voltage()
 		if component.has_method("get_resistance"):
 			total_resistance += component.get_resistance()
 		
-		# Проверяем выключатели
 		if component.has_method("is_switch_on"):
 			if not component.is_switch_on():
-				# Если выключатель разомкнут - цепь не замкнута
 				for comp in circuit:
 					comp.set_meta("current", 0.0)
 					if comp.has_method("update_state"):
 						comp.update_state(0.0)
 				return
 	
-	# Рассчитываем ток по закону Ома
 	var current = 0.0
 	if total_resistance > 0:
 		current = total_voltage / total_resistance
-		current = clamp(current, 0.0, 10.0)  # Ограничиваем максимальный ток
+		current = clamp(current, 0.0, 10.0)
 	
 	print("📊 Цепь: V=", total_voltage, "V, R=", total_resistance, "Ω, I=", current, "A")
 	
-	# Применяем ток ко всем компонентам цепи
 	for component in circuit:
 		component.set_meta("current", current)
 		if component.has_method("update_state"):

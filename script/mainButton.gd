@@ -2,16 +2,14 @@ extends Control
 
 @export var new_game_scene: String = "res://scene/NewGameMenu.tscn"
 @export var import_game_scene: String = "res://scene/ImportGameMenu.tscn"
+@export var level_scene: String = "res://scene/levelScene.tscn"
 
-# === ПЕРЕМЕННЫЕ ДЛЯ ТАЧ-УПРАВЛЕНИЯ ===
 var touch_points = {}
 var last_touch_distance = 0.0
 
 func _ready():
-	# Подключаем кнопки (работает и для мыши, и для тача)
 	_setup_buttons()
 	
-	# Настройка для мобильных устройств
 	if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
 		_setup_mobile_ui()
 		print("📱 Обнаружено мобильное устройство! Включена поддержка тач-управления.")
@@ -19,14 +17,13 @@ func _ready():
 		print("💻 Режим ПК - используются кнопки мыши")
 
 func _setup_buttons():
-	# Находим кнопки и подключаем сигналы
 	var new_game_btn = get_node_or_null("ButtonNewGame")
 	var import_btn = get_node_or_null("ButtonImportGame")
 	var quit_btn = get_node_or_null("ButtonQuit")
+	var level_btn = get_node_or_null("ButtonLevel")
 	
 	if new_game_btn:
 		new_game_btn.pressed.connect(_on_new_game_pressed)
-		# Увеличиваем зону касания для мобильных
 		if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
 			new_game_btn.custom_minimum_size = Vector2(200, 60)
 			new_game_btn.add_theme_font_size_override("font_size", 18)
@@ -48,9 +45,16 @@ func _setup_buttons():
 			quit_btn.add_theme_font_size_override("font_size", 18)
 	else:
 		print("Ошибка: кнопка ButtonQuit не найдена!")
+	
+	if level_btn:
+		level_btn.pressed.connect(_on_level_pressed)
+		if OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios"):
+			level_btn.custom_minimum_size = Vector2(200, 60)
+			level_btn.add_theme_font_size_override("font_size", 18)
+	else:
+		print("Ошибка: кнопка ButtonLevel не найдена!")
 
 func _setup_mobile_ui():
-	# Увеличиваем все кнопки для удобного нажатия пальцем
 	var buttons = get_tree().get_nodes_in_group("menu_buttons")
 	for btn in buttons:
 		if btn is Button:
@@ -58,13 +62,10 @@ func _setup_mobile_ui():
 			btn.add_theme_font_size_override("font_size", 18)
 
 func _input(event):
-	# Обработка тач-экранов (дополнительная)
 	if event is InputEventScreenTouch and event.pressed:
-		# Можно добавить визуальную обратную связь при касании
 		_show_touch_feedback(event.position)
 
 func _show_touch_feedback(position: Vector2):
-	# Визуальная обратная связь при касании (опционально)
 	var feedback = Sprite2D.new()
 	var circle = CircleShape2D.new()
 	circle.radius = 20
@@ -84,6 +85,10 @@ func _on_new_game_pressed():
 func _on_import_game_pressed():
 	print("📥 Нажата кнопка Импорт игры")
 	get_tree().change_scene_to_file(import_game_scene)
+
+func _on_level_pressed():
+	print("🎮 Нажата кнопка Уровни")
+	get_tree().change_scene_to_file(level_scene)
 
 func _on_quit_pressed():
 	print("🚪 Выход из игры")
